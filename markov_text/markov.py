@@ -31,7 +31,7 @@ if __name__ == '__main__':
 		db.setup(depth)
 		
 		txt = codecs.open(file_name, 'r', 'utf-8').read()
-		Parser(name, db, SENTENCE_SEPARATOR, WORD_SEPARATOR).parse(txt)
+		Parser(name, db, SENTENCE_SEPARATOR).parse(txt)
 	
 	elif mode == 'gen':
 		count = int(args[3])

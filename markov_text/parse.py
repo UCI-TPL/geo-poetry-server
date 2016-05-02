@@ -5,12 +5,13 @@ class Parser:
 	SENTENCE_START_SYMBOL = '^'
 	SENTENCE_END_SYMBOL = '$'
 
-	def __init__(self, name, db, sentence_split_char = '\n', word_split_char = ''):
+	def __init__(self, name, db, sentence_split_char = '\n'):
 		self.name = name
 		self.db   = db
 		self.sentence_split_char = sentence_split_char
-		self.word_split_char = word_split_char
-		self.whitespace_regex = re.compile('\s+')
+		# In addition to alphanumeric and underscore characters, ' and - are part of a word,
+		#  but only if they don't occur at the beginning or end of a word.
+		self.word_regex = re.compile("\\b[\\w'-]+\\b")
 
 	def parse(self, txt):
 		sentences = txt.split(self.sentence_split_char)
@@ -21,14 +22,7 @@ class Parser:
 		i = 0
 
 		for sentence in sentences:
-			# Clean extra whitespace.
-			sentence = self.whitespace_regex.sub(" ", sentence).strip()
-
-			list_of_words = None
-			if self.word_split_char:
-				list_of_words = sentence.split(self.word_split_char)
-			else:
-				list_of_words = list(sentence.lower())
+			list_of_words = self.word_regex.findall(sentence)
 
 			words = [Parser.SENTENCE_START_SYMBOL] * (depth - 1) + list_of_words + [Parser.SENTENCE_END_SYMBOL] * (depth - 1)
 			
@@ -40,5 +34,3 @@ class Parser:
 			if i % 1000 == 0:
 				print i
 				sys.stdout.flush()
-
-
