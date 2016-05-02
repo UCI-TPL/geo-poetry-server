@@ -13,11 +13,15 @@ class Parser:
 		self.whitespace_regex = re.compile('\s+')
 
 	def parse(self, txt):
-		depth = self.db.get_depth()
 		sentences = txt.split(self.sentence_split_char)
+		self.parse_list(sentences)
+
+	def parse_list(self, sentences):
+		depth = self.db.get_depth()
 		i = 0
 
 		for sentence in sentences:
+			# Clean extra whitespace.
 			sentence = self.whitespace_regex.sub(" ", sentence).strip()
 
 			list_of_words = None
