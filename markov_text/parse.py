@@ -11,7 +11,7 @@ class Parser:
 		self.sentence_split_char = sentence_split_char
 		# In addition to alphanumeric and underscore characters, ' and - are part of a word,
 		#  but only if they don't occur at the beginning or end of a word.
-		self.word_regex = re.compile("\\b[\\w'-]+\\b")
+		self.word_regex = re.compile("\\b[\\w'-/]+\\b")
 
 	def parse(self, txt):
 		sentences = txt.split(self.sentence_split_char)
