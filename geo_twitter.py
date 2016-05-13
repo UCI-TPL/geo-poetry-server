@@ -1,25 +1,13 @@
-import twitter
-
-class InvalidCredentialsException(Exception):
-	pass
-
-class Location:
-	def __init__(self, longitude=None, latitude=None, radius=10, units='km'):
-		self.longitude = longitude
-		self.latitude = latitude
-		self.radius = radius
-		self.units = units
+from twython import Twython
+from types import *
 
 class GeoTweets:
-	"""Fetches recent tweets from the area surrounding a particular GPS location."""
+	"""Fetches recent tweets from the area surrounding a particular GPS location.
+	Constructor may throw TwythonAuthError."""
 
 	def __init__(self, consumer_key, consumer_secret, access_token_key, access_token_secret):
-		self.api = twitter.Api(consumer_key=consumer_key,
-					consumer_secret=consumer_secret,
-					access_token_key=access_token_key,
-					access_token_secret=access_token_secret)
-		if self.api.VerifyCredentials() == None:
-			raise InvalidCredentialsException
+		self.api = Twython(consumer_key, consumer_secret, access_token_key, access_token_secret)
+		self.api.verify_credentials()
 	
 	def FilterTweets(self, list):
 		"""Generator that attempts to eliminate commercial tweets."""
@@ -36,13 +24,17 @@ class GeoTweets:
 			tweet_clean = tweet_clean.trim() # Trim whitespace
 			if len(tweet_clean) > 0:
 				yield tweet_clean
-			else:
+			else: # Skip tweets that are now empty
 				continue
 
 	def FetchTweets(self, location):
 		"""Generator that queries the Twitter API to fetch nearby tweets"""
-		# TODO 
-		return []
+		location_str = str(location.latitude)+','+str(location.longitude)+','+str(location.radius)
+		if location.imperial_units:
+			location_str += 'mi'
+		else:
+			location_str += 'km'
+		return twitter.cursor(twitter.search, q='-RT', result_type='recent', lang='en', geocode=location_str)
 
 	def tweets(self, location):
 		"""Generator that queries the Twitter API to fetch nearby tweets, and filters and cleans them."""
