@@ -38,7 +38,7 @@ class GeoTweets:
 			location_str += 'mi'
 		else:
 			location_str += 'km'
-		return twitter.cursor(twitter.search, q='-RT', result_type='recent', lang='en', geocode=location_str)
+		return self.api.cursor(self.api.search, q='-RT', result_type='recent', lang='en', geocode=location_str)
 
 	def Tweets(self, location):
 		"""Generator that queries the Twitter API to fetch nearby tweets, and filters and cleans them."""

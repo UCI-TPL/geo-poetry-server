@@ -9,6 +9,8 @@ sys.path.append(parent_dir)
 
 import fudge
 from geo_twitter import GeoTweets
+from twython import TwythonAuthError
+import pytest
 
 FAKE_CONSUMER_KEY = 'consumerkey'
 FAKE_CONSUMER_SECRET = 'consumersecret'
@@ -26,9 +28,29 @@ def test_GeoTweets_init(MockTwython):
 	"""
 	(MockTwython.expects_call()
 				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
-				.returns_fake().expects('verify_credentials').with_arg_count(0))
+				.returns_fake()
+				.expects('verify_credentials').with_arg_count(0))
 	GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
 
+@fudge.patch('twython.Twython')
+def test_GeoTweets_verify_credentials(MockTwython):
+	(MockTwython.expects_call()
+				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+				.returns_fake()
+				.expects('verify_credentials').with_arg_count(0)
+				.expects('verify_credentials').with_arg_count(0))
+	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+	geo_tweets.verify_credentials()
+
+@fudge.patch('twython.Twython')
+def test_GeoTweets_init_bad_credentials(MockTwython):
+	(MockTwython.expects_call()
+				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+				.returns_fake()
+				.expects('verify_credentials').with_arg_count(0)
+				.raises(TwythonAuthError("Example message.")))
+	with pytest.raises(TwythonAuthError):
+		geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+
 if __name__ == '__main__':
-	import pytest
 	pytest.main([__file__])
