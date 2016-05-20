@@ -1,5 +1,8 @@
 import twython
-from types import *
+import re
+from common_types import *
+
+URL_REGEX = r'(https?://\S*)' # Eh, good enough for my purposes
 
 class GeoTweets:
 	"""Fetches recent tweets from the area surrounding a particular GPS location.
@@ -22,10 +25,10 @@ class GeoTweets:
 	def CleanTweets(self, list):
 		"""Generator that removes unwanted text (URLs, #tags, @mentions) from tweets."""
 		for tweet in list:
-			tweet_clean = re.sub(URL_REGEX, '', s) # Remove URLs
-			tweet_clean = re.sub(r'@\w+', '', s_clean) # Remove mentions
-			tweet_clean = re.sub(r'#\w+', '', s_clean) # Remove hashtags
-			tweet_clean = tweet_clean.trim() # Trim whitespace
+			tweet_clean = re.sub(URL_REGEX, '', tweet) # Remove URLs
+			tweet_clean = re.sub(r'@\w+', '', tweet_clean) # Remove mentions
+			tweet_clean = re.sub(r'#\w+', '', tweet_clean) # Remove hashtags
+			tweet_clean = tweet_clean.strip() # Trim whitespace
 			if len(tweet_clean) > 0:
 				yield tweet_clean
 			else: # Skip tweets that are now empty
