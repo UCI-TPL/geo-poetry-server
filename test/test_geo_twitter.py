@@ -16,8 +16,6 @@ import pytest
 
 FAKE_CONSUMER_KEY = 'consumerkey'
 FAKE_CONSUMER_SECRET = 'consumersecret'
-FAKE_ACCESS_TOKEN_KEY = 'accesstokenkey'
-FAKE_ACCESS_TOKEN_SECRET = 'accesstokensecret'
 FAKE_LOCATION_LAT = 10.0
 FAKE_LOCATION_LONG = 10.0
 FAKE_LOCATION_RADIUS = 10
@@ -32,10 +30,10 @@ def test_GeoTweets_init(MockTwython):
 		- L{geo_twitter.GeoTweets.verify_credentials}
 	"""
 	(MockTwython.expects_call()
-				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 				.returns_fake()
 				.expects('verify_credentials').with_arg_count(0))
-	GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+	GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 
 @fudge.patch('twython.Twython')
 def test_GeoTweets_verify_credentials(MockTwython):
@@ -47,11 +45,11 @@ def test_GeoTweets_verify_credentials(MockTwython):
 		- L{geo_twitter.GeoTweets.verify_credentials}
 	"""
 	(MockTwython.expects_call()
-				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 				.returns_fake()
 				.expects('verify_credentials').with_arg_count(0)
 				.expects('verify_credentials').with_arg_count(0))
-	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 	geo_tweets.verify_credentials()
 
 @fudge.patch('twython.Twython')
@@ -64,12 +62,12 @@ def test_GeoTweets_init_bad_credentials(MockTwython):
 		- L{geo_twitter.GeoTweets.verify_credentials}
 	"""
 	(MockTwython.expects_call()
-				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 				.returns_fake()
 				.expects('verify_credentials').with_arg_count(0)
 				.raises(TwythonAuthError("Example message.")))
 	with pytest.raises(TwythonAuthError):
-		geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+		geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 
 @fudge.patch('twython.Twython')
 def test_GeoTweets_FetchTweets_imperial(MockTwython):
@@ -83,7 +81,7 @@ def test_GeoTweets_FetchTweets_imperial(MockTwython):
 	"""
 	(MockTwython.expects_call()
 				# __init__
-				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 				.returns_fake()
 				.expects('verify_credentials').with_arg_count(0)
 
@@ -91,7 +89,7 @@ def test_GeoTweets_FetchTweets_imperial(MockTwython):
 				.has_attr(search=None)
 				.expects('cursor').with_args(None, q='-RT', result_type='recent', lang='en', 
 									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'mi'))
-	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 	fake_location = Location(FAKE_LOCATION_LAT, FAKE_LOCATION_LONG, FAKE_LOCATION_RADIUS)
 	geo_tweets.FetchTweets(fake_location)
 
@@ -107,7 +105,7 @@ def test_GeoTweets_FetchTweets_metric(MockTwython):
 	"""
 	(MockTwython.expects_call()
 				# __init__
-				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 				.returns_fake()
 				.expects('verify_credentials').with_arg_count(0)
 
@@ -115,7 +113,7 @@ def test_GeoTweets_FetchTweets_metric(MockTwython):
 				.has_attr(search=None)
 				.expects('cursor').with_args(None, q='-RT', result_type='recent', lang='en', 
 									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'km'))
-	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 	fake_location = Location(FAKE_LOCATION_LAT, FAKE_LOCATION_LONG, FAKE_LOCATION_RADIUS, False)
 	geo_tweets.FetchTweets(fake_location)
 
@@ -131,10 +129,10 @@ def test_GeoTweets_CleanTweets(MockTwython):
 	"""
 	(MockTwython.expects_call()
 				# __init__
-				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 				.returns_fake()
 				.expects('verify_credentials').with_arg_count(0))
-	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET, FAKE_ACCESS_TOKEN_KEY, FAKE_ACCESS_TOKEN_SECRET)
+	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 	dirty_tweet = "  http://www.google.com/ @some_username hello, world #uggghhhh  "
 	url_tweet = "http://example.com/my%20webpage"
 	clean_tweet = "hello, world"

@@ -8,8 +8,8 @@ class GeoTweets:
 	"""Fetches recent tweets from the area surrounding a particular GPS location.
 	Methods may throw TwythonAuthError."""
 
-	def __init__(self, consumer_key, consumer_secret, access_token_key, access_token_secret):
-		self.api = twython.Twython(consumer_key, consumer_secret, access_token_key, access_token_secret)
+	def __init__(self, consumer_key, consumer_secret):
+		self.api = twython.Twython(consumer_key, consumer_secret)
 		self.verify_credentials()
 
 	def verify_credentials(self):
