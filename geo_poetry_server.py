@@ -1,10 +1,9 @@
 from flask import Flask, jsonify, request, abort
 from ConfigParser import SafeConfigParser
 import geo_twitter
-from markov_text import MarkovGenerator
+import markov_text
 import os
-from datetime import datetime
-from twython import TwythonAuthError
+import tempfile
 
 # The actual consumer key & secret are read from a config file during startup,
 # but we need unique values here for testing purposes. See test/test_geo_poetry_server.py
@@ -12,7 +11,6 @@ TWITTER_CONSUMER_KEY = "TwitterConsumerKey"
 TWITTER_CONSUMER_SECRET = "TwitterConsumerSecret"
 CONF_FILE_PATH = "/scratch/twitter.conf"
 MARKOV_DEPTH = 2
-MARKOV_DB_FOLDER = "/scratch/markov_dbs/"
 POEM_LINES_TO_GENERATE = 3
 RESPONSE_KEY_POETRY = 'poetry'
 
@@ -29,11 +27,11 @@ def get_geo_poetry():
 
 	# Generate poetry
 	#TODO use tempfile module instead
-	random_stamp = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(8))
-	filename = datetime.utcnow().isoformat() + '_' + random_stamp
-	markov_db_file = os.path.join(MARKOV_DB_FOLDER, filename)
-	poems = MarkovGenerator(tweets.Tweets(), MARKOV_DEPTH, markov_db_file)
-	poetry = '\n'.join(poems.next() for _ in range(POEM_LINES_TO_GENERATE))
+	markov_db_file, markov_db_filepath = tempfile.mkstemp(suffix='db')
+	poems = markov_text.MarkovGenerator(tweets.Tweets(), MARKOV_DEPTH, markov_db_file)
+	poetry = '\n'.join([poems.next() for _ in range(POEM_LINES_TO_GENERATE)])
+	os.close(markov_db_file)
+	os.unlink(markov_db_filepath)
 
 	# TODO Get music recommendations
 
