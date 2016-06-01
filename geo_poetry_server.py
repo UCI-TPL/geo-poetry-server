@@ -43,7 +43,7 @@ def get_geo_poetry():
 	except ValueError as err:
 		app.logger.warning('geo-poetry given a non-numerical argument: '+err.message)
 		abort(400)
-	except AssertionError ass err:
+	except AssertionError as err:
 		app.logger.warning('geo-poetry given a non-boolean for imperial_units')
 		abort(400)
 
