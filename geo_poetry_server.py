@@ -17,9 +17,11 @@ TWITTER_CONSUMER_KEY = "TwitterConsumerKey"
 TWITTER_CONSUMER_SECRET = "TwitterConsumerSecret"
 CONF_FILE_PATH = "scratch/twitter.conf" # TODO Change location in production.
 MAX_TWEETS_TO_READ = 500
+MIN_TWEETS_TO_READ = 100
 MARKOV_DEPTH = 2
 POEM_LINES_TO_GENERATE = 3
 RESPONSE_KEY_POETRY = 'poetry'
+RESPONSE_KEY_TWEETS_READ_COUNT = 'num_source_tweets'
 DEFAULT_RADIUS = 10
 DEFAULT_IMPERIAL_UNITS = False
 
@@ -77,10 +79,19 @@ def get_geo_poetry():
 	tweets = geo_twitter.GeoTweets(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
 
 	# Generate poetry
-	def tweet_limitor(generator):
+	tweets_count_dict = {'count': 0} # We have to use closure so we can modify it in the function, and read it outside
+	def tweet_limitor(generator, count_dict):
 		for i in range(MAX_TWEETS_TO_READ):
-			yield generator.next()
-	poems = markov_text.MarkovGenerator(tweet_limitor(tweets.Tweets(location)), MARKOV_DEPTH, ":memory:")
+			count_dict['count'] += 1
+			try:
+				yield generator.next()
+			except StopIteration:
+				count_dict['count'] -= 1
+				raise StopIteration
+	poems = markov_text.MarkovGenerator(tweet_limitor(tweets.Tweets(location), tweets_count_dict), MARKOV_DEPTH, ":memory:")
+	if tweets_count_dict['count'] < MIN_TWEETS_TO_READ:
+		# If we hit Twitter's rate limit, tweets.Tweets(location) will raise StopIteration early
+		abort(429)
 	poetry = '\n'.join([poems.next() for _ in range(POEM_LINES_TO_GENERATE)])
 
 	# TODO Get music recommendations
@@ -88,6 +99,7 @@ def get_geo_poetry():
 	# Build JSON Response
 	response = {}
 	response[RESPONSE_KEY_POETRY] = poetry
+	response[RESPONSE_KEY_TWEETS_READ_COUNT] = tweets_count_dict['count']
 	return jsonify(response)
 
 
