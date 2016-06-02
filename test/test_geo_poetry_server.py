@@ -168,7 +168,7 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator):
 	Functions tested:
 		- L{geo_poetry_server.get_geo_poetry}
 	"""
-	fake_tweets_list = 'ListOfTweets'
+	fake_tweets_list = ['ListOfTweets']
 	fake_poetry_line = 'A Line Of CG Poetry.'
 	def check_location_obj(obj):
 		if not isinstance(obj, Location):
@@ -188,7 +188,7 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator):
 		.expects('Tweets').with_args(arg.passes_test(check_location_obj))
 		.returns(fake_tweets_list))
 	(MockMarkovGenerator.expects_call()
-		.with_args(fake_tweets_list, MARKOV_DEPTH, arg.any())
+		.with_args(arg.any(), MARKOV_DEPTH, ':memory:')
 		.returns_fake()
 		.expects('next').times_called(POEM_LINES_TO_GENERATE).returns(fake_poetry_line))
 

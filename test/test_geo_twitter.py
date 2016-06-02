@@ -23,51 +23,15 @@ FAKE_LOCATION_RADIUS = 10
 @fudge.patch('twython.Twython')
 def test_GeoTweets_init(MockTwython):
 	"""
-	GeoTweets constructor constructs a Twython instance, then verifies credentials.
+	GeoTweets constructor constructs a Twython instance.
 
 	Functions tested:
 		- L{geo_twitter.GeoTweets.__init__}
-		- L{geo_twitter.GeoTweets.verify_credentials}
 	"""
 	(MockTwython.expects_call()
 				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
-				.returns_fake()
-				.expects('verify_credentials').with_arg_count(0))
+				.returns_fake())
 	GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
-
-@fudge.patch('twython.Twython')
-def test_GeoTweets_verify_credentials(MockTwython):
-	"""
-	GeoTweets.verify_credentials calls Twython.verify_credentials.
-
-	Functions tested:
-		- L{geo_twitter.GeoTweets.__init__}
-		- L{geo_twitter.GeoTweets.verify_credentials}
-	"""
-	(MockTwython.expects_call()
-				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
-				.returns_fake()
-				.expects('verify_credentials').with_arg_count(0)
-				.expects('verify_credentials').with_arg_count(0))
-	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
-	geo_tweets.verify_credentials()
-
-@fudge.patch('twython.Twython')
-def test_GeoTweets_init_bad_credentials(MockTwython):
-	"""
-	GeoTweets constructor raises TwythonAuthError when credentials are bad.
-
-	Functions tested:
-		- L{geo_twitter.GeoTweets.__init__}
-		- L{geo_twitter.GeoTweets.verify_credentials}
-	"""
-	(MockTwython.expects_call()
-				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
-				.returns_fake()
-				.expects('verify_credentials').with_arg_count(0)
-				.raises(TwythonAuthError("Example message.")))
-	with pytest.raises(TwythonAuthError):
-		geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 
 @fudge.patch('twython.Twython')
 def test_GeoTweets_FetchTweets_imperial(MockTwython):
@@ -76,14 +40,12 @@ def test_GeoTweets_FetchTweets_imperial(MockTwython):
 
 	Functions tested:
 		- L{geo_twitter.GeoTweets.__init__}
-		- L{geo_twitter.GeoTweets.verify_credentials}
 		- L{geo_twitter.GeoTweets.FetchTweets}
 	"""
 	(MockTwython.expects_call()
 				# __init__
 				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 				.returns_fake()
-				.expects('verify_credentials').with_arg_count(0)
 
 				# FetchTweets
 				.has_attr(search=None)
@@ -101,14 +63,12 @@ def test_GeoTweets_FetchTweets_metric(MockTwython):
 
 	Functions tested:
 		- L{geo_twitter.GeoTweets.__init__}
-		- L{geo_twitter.GeoTweets.verify_credentials}
 		- L{geo_twitter.GeoTweets.FetchTweets}
 	"""
 	(MockTwython.expects_call()
 				# __init__
 				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 				.returns_fake()
-				.expects('verify_credentials').with_arg_count(0)
 
 				# FetchTweets
 				.has_attr(search=None)
@@ -126,14 +86,12 @@ def test_GeoTweets_CleanTweets(MockTwython):
 
 	Functions tested:
 		- L{geo_twitter.GeoTweets.__init__}
-		- L{geo_twitter.GeoTweets.verify_credentials}
 		- L{geo_twitter.GeoTweets.CleanTweets}
 	"""
 	(MockTwython.expects_call()
 				# __init__
 				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
-				.returns_fake()
-				.expects('verify_credentials').with_arg_count(0))
+				.returns_fake())
 	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 	dirty_tweet = "  http://www.google.com/ @some_username hello, world #uggghhhh  "
 	url_tweet = "http://example.com/my%20webpage"
@@ -149,14 +107,12 @@ def test_GeoTweets_FilterTweets(MockTwython):
 
 	Functions tested:
 		- L{geo_twitter.GeoTweets.__init__}
-		- L{geo_twitter.GeoTweets.verify_credentials}
 		- L{geo_twitter.GeoTweets.FilterTweets}
 	"""
 	(MockTwython.expects_call()
 				# __init__
 				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
-				.returns_fake()
-				.expects('verify_credentials').with_arg_count(0))
+				.returns_fake())
 	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 
 	tweet_verified_user = {
@@ -195,14 +151,12 @@ def test_GeoTweets_ExtractText(MockTwython):
 
 	Functions tested:
 		- L{geo_twitter.GeoTweets.__init__}
-		- L{geo_twitter.GeoTweets.verify_credentials}
 		- L{geo_twitter.GeoTweets.FilterTweets}
 	"""
 	(MockTwython.expects_call()
 				# __init__
 				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
-				.returns_fake()
-				.expects('verify_credentials').with_arg_count(0))
+				.returns_fake())
 	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 
 	tweets = [{ 'text' : 'Text1' }, { 'text' : 'Text2' }]
