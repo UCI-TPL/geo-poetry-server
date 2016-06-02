@@ -9,7 +9,7 @@ sys.path.append(parent_dir)
 
 import fudge
 from fudge.inspector import arg
-from geo_twitter import GeoTweets
+from geo_twitter import GeoTweets, MIN_NUM_FOLLOWERS, MAX_NUM_FOLLOWERS
 from twython import TwythonAuthError
 from common_types import Location
 import pytest
@@ -88,10 +88,11 @@ def test_GeoTweets_FetchTweets_imperial(MockTwython):
 				# FetchTweets
 				.has_attr(search=None)
 				.expects('cursor').with_args(None, q='-RT', result_type='recent', lang='en', 
-									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'mi'))
+									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'mi')
+				.returns('CONSTANT'))
 	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 	fake_location = Location(FAKE_LOCATION_LAT, FAKE_LOCATION_LONG, FAKE_LOCATION_RADIUS)
-	geo_tweets.FetchTweets(fake_location)
+	assert geo_tweets.FetchTweets(fake_location) == 'CONSTANT'
 
 @fudge.patch('twython.Twython')
 def test_GeoTweets_FetchTweets_metric(MockTwython):
@@ -112,10 +113,11 @@ def test_GeoTweets_FetchTweets_metric(MockTwython):
 				# FetchTweets
 				.has_attr(search=None)
 				.expects('cursor').with_args(None, q='-RT', result_type='recent', lang='en', 
-									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'km'))
+									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'km')
+				.returns('CONSTANT'))
 	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 	fake_location = Location(FAKE_LOCATION_LAT, FAKE_LOCATION_LONG, FAKE_LOCATION_RADIUS, False)
-	geo_tweets.FetchTweets(fake_location)
+	assert geo_tweets.FetchTweets(fake_location) == 'CONSTANT'
 
 @fudge.patch('twython.Twython')
 def test_GeoTweets_CleanTweets(MockTwython):
@@ -139,6 +141,72 @@ def test_GeoTweets_CleanTweets(MockTwython):
 	cleaned = [x for x in geo_tweets.CleanTweets([dirty_tweet, url_tweet])]
 	assert len(cleaned) == 1
 	assert cleaned[0] == clean_tweet
+
+@fudge.patch('twython.Twython')
+def test_GeoTweets_FilterTweets(MockTwython):
+	"""
+	GeoTweets.FilterTweets filters out tweets from verified users or users with too many or too few followers.
+
+	Functions tested:
+		- L{geo_twitter.GeoTweets.__init__}
+		- L{geo_twitter.GeoTweets.verify_credentials}
+		- L{geo_twitter.GeoTweets.FilterTweets}
+	"""
+	(MockTwython.expects_call()
+				# __init__
+				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
+				.returns_fake()
+				.expects('verify_credentials').with_arg_count(0))
+	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
+
+	tweet_verified_user = {
+		'user' : {
+			'verified' : True,
+			'followers_count' : MIN_NUM_FOLLOWERS
+		}
+	}
+	tweet_too_few_followers = {
+		'user' : {
+			'verified' : False,
+			'followers_count' : MIN_NUM_FOLLOWERS - 1
+		}
+	}
+	tweet_too_many_followers = {
+		'user' : {
+			'verified' : False,
+			'followers_count' : MAX_NUM_FOLLOWERS + 1
+		}
+	}
+	tweet_okay = {
+		'user' : {
+			'verified' : False,
+			'followers_count' : MIN_NUM_FOLLOWERS
+		}
+	}
+	tweets = [tweet_verified_user, tweet_okay, tweet_too_many_followers, tweet_too_few_followers]
+	filtered_tweets = [tweet for tweet in geo_tweets.FilterTweets(tweets)]
+	assert len(filtered_tweets) == 1
+	assert filtered_tweets[0] == tweet_okay
+
+@fudge.patch('twython.Twython')
+def test_GeoTweets_ExtractText(MockTwython):
+	"""
+	GeoTweets.FilterTweets filters out tweets from verified users or users with too many or too few followers.
+
+	Functions tested:
+		- L{geo_twitter.GeoTweets.__init__}
+		- L{geo_twitter.GeoTweets.verify_credentials}
+		- L{geo_twitter.GeoTweets.FilterTweets}
+	"""
+	(MockTwython.expects_call()
+				# __init__
+				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
+				.returns_fake()
+				.expects('verify_credentials').with_arg_count(0))
+	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
+
+	tweets = [{ 'text' : 'Text1' }, { 'text' : 'Text2' }]
+	assert [s for s in geo_tweets.ExtractText(tweets)] == ['Text1', 'Text2']
 
 
 if __name__ == '__main__':

@@ -3,6 +3,8 @@ import re
 from common_types import *
 
 URL_REGEX = r'(https?://\S*)' # Eh, good enough for my purposes
+MIN_NUM_FOLLOWERS = 0
+MAX_NUM_FOLLOWERS = 10000
 
 class GeoTweets:
 	"""Fetches recent tweets from the area surrounding a particular GPS location.
@@ -17,13 +19,23 @@ class GeoTweets:
 		self.api.verify_credentials()
 
 	def FilterTweets(self, list):
-		"""Generator that attempts to eliminate commercial tweets."""
-		# TODO Use Bayesian spam filtering? This is gonna be tricky...
-		for item in list:
-			yield item
+		"""Generator that attempts to eliminate commercial tweets.
+		Filters out tweets from (1) verified accounts, and
+			(2) Accounts with less than MIN_NUM_FOLLOWERS or greater than MAX_NUM_FOLLOWERS followers."""
+		for tweet in list:
+			if tweet['user']['verified']:
+				continue
+			elif tweet['user']['followers_count'] < MIN_NUM_FOLLOWERS or tweet['user']['followers_count'] > MAX_NUM_FOLLOWERS:
+				continue
+			yield tweet
+
+	def ExtractText(self, list):
+		"""Generator that returns the tweet text strings from a list of tweets."""
+		for tweet in list:
+			yield tweet['text']
 
 	def CleanTweets(self, list):
-		"""Generator that removes unwanted text (URLs, #tags, @mentions) from tweets."""
+		"""Generator that removes unwanted text (URLs, #tags, @mentions) from a list of strings."""
 		for tweet in list:
 			tweet_clean = re.sub(URL_REGEX, '', tweet) # Remove URLs
 			tweet_clean = re.sub(r'@\w+', '', tweet_clean) # Remove mentions
@@ -45,4 +57,4 @@ class GeoTweets:
 
 	def Tweets(self, location):
 		"""Generator that queries the Twitter API to fetch nearby tweets, and filters and cleans them."""
-		return self.CleanTweets(self.FilterTweets(self.FetchTweets(location)))
+		return self.CleanTweets(self.ExtractText(self.FilterTweets(self.FetchTweets(location))))
