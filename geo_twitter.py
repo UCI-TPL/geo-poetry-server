@@ -11,15 +11,10 @@ MAX_NUM_FOLLOWERS = 10000
 
 class GeoTweets:
 	"""Fetches recent tweets from the area surrounding a particular GPS location.
-	Constructor may throw TwythonAuthError."""
+	Methods may throw TwythonAuthError."""
 
 	def __init__(self, consumer_key, consumer_secret):
 		self.api = twython.Twython(consumer_key, consumer_secret)
-		self.verify_credentials()
-
-	def verify_credentials(self):
-		"""Throws TwythonAuthError unless all Twitter credentials are valid."""
-		self.api.verify_credentials()
 
 	def FilterTweets(self, list):
 		"""Generator that attempts to eliminate commercial tweets.
@@ -63,4 +58,11 @@ class GeoTweets:
 
 		Simply chains all the generator methods: L{FetchTweets} -> L{FilterTweets} -> L{ExtractText} -> L{CleanTweets}
 		Because this is all it does, I didn't bother including it in the unit tests."""
-		return self.CleanTweets(self.ExtractText(self.FilterTweets(self.FetchTweets(location))))
+		generator = self.CleanTweets(self.ExtractText(self.FilterTweets(self.FetchTweets(location))))
+		try:
+			while True:
+				yield generator.next()
+		except twython.TwythonRateLimitError:
+			# TODO This is useful if we hit the rate limit in the middle of a request, but we should
+			#  notify the client if we are rate-limited before we can gather hardly any tweets.
+			raise StopIterationException

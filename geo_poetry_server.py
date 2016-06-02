@@ -15,7 +15,8 @@ import tempfile
 # but we need unique values here for testing purposes. See test/test_geo_poetry_server.py
 TWITTER_CONSUMER_KEY = "TwitterConsumerKey"
 TWITTER_CONSUMER_SECRET = "TwitterConsumerSecret"
-CONF_FILE_PATH = "/scratch/twitter.conf" # TODO Change location in production.
+CONF_FILE_PATH = "scratch/twitter.conf" # TODO Change location in production.
+MAX_TWEETS_TO_READ = 500
 MARKOV_DEPTH = 2
 POEM_LINES_TO_GENERATE = 3
 RESPONSE_KEY_POETRY = 'poetry'
@@ -50,6 +51,7 @@ def get_geo_poetry():
 	try:
 		json_data = request.get_json()
 		if json_data == None:
+			app.logger.warning('geo-poetry request did not contain valid JSON')
 			abort(400)
 		latitude = float(json_data['latitude'])
 		longitude = float(json_data['longitude'])
@@ -75,12 +77,11 @@ def get_geo_poetry():
 	tweets = geo_twitter.GeoTweets(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
 
 	# Generate poetry
-	#TODO use tempfile module instead
-	markov_db_file, markov_db_filepath = tempfile.mkstemp(suffix='db')
-	poems = markov_text.MarkovGenerator(tweets.Tweets(location), MARKOV_DEPTH, markov_db_file)
+	def tweet_limitor(generator):
+		for i in range(MAX_TWEETS_TO_READ):
+			yield generator.next()
+	poems = markov_text.MarkovGenerator(tweet_limitor(tweets.Tweets(location)), MARKOV_DEPTH, ":memory:")
 	poetry = '\n'.join([poems.next() for _ in range(POEM_LINES_TO_GENERATE)])
-	os.close(markov_db_file)
-	os.unlink(markov_db_filepath)
 
 	# TODO Get music recommendations
 
