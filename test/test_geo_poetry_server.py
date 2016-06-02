@@ -52,6 +52,26 @@ def test_get_geo_poetry_auth_failure(MockGeoTweets):
 			'imperial_units' : True}),
 		content_type='application/json')
 
+def test_get_geo_poetry_wrong_mime_type():
+	"""
+	The get_geo_poetry method returns 400 Bad Request if the POST data is not application/json.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
+	response = client.post("/geo-poetry", data="BlahBlahBlah", content_type='text/plain')
+	assert response.status_code == 400
+
+def test_get_geo_poetry_malformed_json():
+	"""
+	The get_geo_poetry method returns 400 Bad Request if the POST data is not valid JSON.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
+	response = client.post("/geo-poetry", data="BlahBlahBlah", content_type='application/json')
+	assert response.status_code == 400
+
 def test_get_geo_poetry_missing_latitude():
 	"""
 	The get_geo_poetry method returns 400 Bad Request if the latitude attribute is missing.

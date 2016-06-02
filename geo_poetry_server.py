@@ -28,12 +28,12 @@ app = Flask(__name__)
 def ping():
 	"""
 	Simple server ping method.
-
+	
 	Route: /ping
 	HTTP Methods supported: GET
 	@return: A JSON object with two attributes: 'up' (true), 'version' (a version string).
 	"""
-    return jsonify({'up': True, 'version': "0.0"})
+	return jsonify({'up': True, 'version': "0.0"})
 
 @app.route("/geo-poetry", methods=['POST'])
 def get_geo_poetry():
@@ -49,6 +49,8 @@ def get_geo_poetry():
 	"""
 	try:
 		json_data = request.get_json()
+		if json_data == None:
+			abort(400)
 		latitude = float(json_data['latitude'])
 		longitude = float(json_data['longitude'])
 		try:
