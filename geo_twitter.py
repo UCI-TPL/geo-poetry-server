@@ -1,3 +1,6 @@
+"""
+The geo_twitter module exports a single class, L{GeoTweets}, that handles fetching tweets near a location.
+"""
 import twython
 import re
 from common_types import *
@@ -8,7 +11,7 @@ MAX_NUM_FOLLOWERS = 10000
 
 class GeoTweets:
 	"""Fetches recent tweets from the area surrounding a particular GPS location.
-	Methods may throw TwythonAuthError."""
+	Constructor may throw TwythonAuthError."""
 
 	def __init__(self, consumer_key, consumer_secret):
 		self.api = twython.Twython(consumer_key, consumer_secret)
@@ -47,7 +50,7 @@ class GeoTweets:
 				continue
 
 	def FetchTweets(self, location):
-		"""Generator that queries the Twitter API to fetch nearby tweets"""
+		"""Generator that queries the Twitter API to fetch nearby tweets."""
 		location_str = str(location.latitude)+','+str(location.longitude)+','+str(location.radius)
 		if location.imperial_units:
 			location_str += 'mi'
@@ -56,5 +59,8 @@ class GeoTweets:
 		return self.api.cursor(self.api.search, q='-RT', result_type='recent', lang='en', geocode=location_str)
 
 	def Tweets(self, location):
-		"""Generator that queries the Twitter API to fetch nearby tweets, and filters and cleans them."""
+		"""Generator that queries the Twitter API to fetch nearby tweets, and filters and cleans them.
+
+		Simply chains all the generator methods: L{FetchTweets} -> L{FilterTweets} -> L{ExtractText} -> L{CleanTweets}
+		Because this is all it does, I didn't bother including it in the unit tests."""
 		return self.CleanTweets(self.ExtractText(self.FilterTweets(self.FetchTweets(location))))

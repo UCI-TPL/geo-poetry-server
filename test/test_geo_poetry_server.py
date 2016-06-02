@@ -1,3 +1,6 @@
+"""
+Unit tests for module L{geo_poetry_server}
+"""
 import sys
 import os
 # Add the parent directory (one level above test/) to the import search path
@@ -18,6 +21,12 @@ app.config['TESTING'] = True
 client = app.test_client()
 
 def test_ping():
+	"""
+	The ping method returns the JSON {'up': true, 'version': "0.0"}.
+
+	Functions tested:
+		- L{geo_poetry_server.ping}
+	"""
 	response = client.get("/ping")
 	response_json = json.loads(response.get_data())
 	assert response.status_code == 200
@@ -26,6 +35,12 @@ def test_ping():
 
 @fudge.patch('geo_twitter.GeoTweets')
 def test_get_geo_poetry_auth_failure(MockGeoTweets):
+	"""
+	The get_geo_poetry method raises TwythonAuthError if the GeoTweets constructor does.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
 	(MockGeoTweets.expects_call()
 		.with_args(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
 		.raises(TwythonAuthError("Example message.")))
@@ -38,6 +53,12 @@ def test_get_geo_poetry_auth_failure(MockGeoTweets):
 		content_type='application/json')
 
 def test_get_geo_poetry_missing_latitude():
+	"""
+	The get_geo_poetry method returns 400 Bad Request if the latitude attribute is missing.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
 	response = client.post("/geo-poetry", data=json.dumps({
 			'longitude' : 0.0,
 			'radius' : 10,
@@ -46,6 +67,12 @@ def test_get_geo_poetry_missing_latitude():
 	assert response.status_code == 400
 
 def test_get_geo_poetry_missing_longitude():
+	"""
+	The get_geo_poetry method returns 400 Bad Request if the longitude attribute is missing.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
 	response = client.post("/geo-poetry", data=json.dumps({
 			'latitude' : 0.0,
 			'radius' : 10,
@@ -54,6 +81,12 @@ def test_get_geo_poetry_missing_longitude():
 	assert response.status_code == 400
 
 def test_get_geo_poetry_bad_latitude():
+	"""
+	The get_geo_poetry method returns 400 Bad Request if the latitude attribute is not a number.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
 	response = client.post("/geo-poetry", data=json.dumps({
 			'latitude' : 'a',
 			'longitude' : 0.0,
@@ -63,6 +96,12 @@ def test_get_geo_poetry_bad_latitude():
 	assert response.status_code == 400
 
 def test_get_geo_poetry_bad_longitude():
+	"""
+	The get_geo_poetry method returns 400 Bad Request if the longitude attribute is not a number.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
 	response = client.post("/geo-poetry", data=json.dumps({
 			'latitude' : 0,
 			'longitude' : 'a',
@@ -72,6 +111,12 @@ def test_get_geo_poetry_bad_longitude():
 	assert response.status_code == 400
 
 def test_get_geo_poetry_bad_radius():
+	"""
+	The get_geo_poetry method returns 400 Bad Request if the radius attribute is not a number.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
 	response = client.post("/geo-poetry", data=json.dumps({
 			'latitude' : 0,
 			'longitude' : 0.0,
@@ -81,6 +126,12 @@ def test_get_geo_poetry_bad_radius():
 	assert response.status_code == 400
 
 def test_get_geo_poetry_bad_imperial_units():
+	"""
+	The get_geo_poetry method returns 400 Bad Request if the imperial_units attribute is not a boolean.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
 	response = client.post("/geo-poetry", data=json.dumps({
 			'latitude' : 0,
 			'longitude' : 0.0,
@@ -91,6 +142,12 @@ def test_get_geo_poetry_bad_imperial_units():
 
 @fudge.patch('geo_twitter.GeoTweets', 'markov_text.MarkovGenerator')
 def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator):
+	"""
+	The get_geo_poetry method works as expected when given valid input.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
 	fake_tweets_list = 'ListOfTweets'
 	fake_poetry_line = 'A Line Of CG Poetry.'
 	def check_location_obj(obj):

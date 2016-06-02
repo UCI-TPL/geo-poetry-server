@@ -1,3 +1,8 @@
+"""
+The main server program. Spins up a Flask instance with the necessary methods.
+
+Expects Twitter API keys to be stored in scratch/twitter.conf in the current working directory.
+"""
 from flask import Flask, jsonify, request, abort
 from ConfigParser import SafeConfigParser
 from common_types import Location
@@ -10,7 +15,7 @@ import tempfile
 # but we need unique values here for testing purposes. See test/test_geo_poetry_server.py
 TWITTER_CONSUMER_KEY = "TwitterConsumerKey"
 TWITTER_CONSUMER_SECRET = "TwitterConsumerSecret"
-CONF_FILE_PATH = "/scratch/twitter.conf"
+CONF_FILE_PATH = "/scratch/twitter.conf" # TODO Change location in production.
 MARKOV_DEPTH = 2
 POEM_LINES_TO_GENERATE = 3
 RESPONSE_KEY_POETRY = 'poetry'
@@ -21,10 +26,27 @@ app = Flask(__name__)
 
 @app.route("/ping")
 def ping():
+	"""
+	Simple server ping method.
+
+	Route: /ping
+	HTTP Methods supported: GET
+	@return: A JSON object with two attributes: 'up' (true), 'version' (a version string).
+	"""
     return jsonify({'up': True, 'version': "0.0"})
 
 @app.route("/geo-poetry", methods=['POST'])
 def get_geo_poetry():
+	"""
+	The main server method to fetch "poetry" and mood music.
+
+	Route: /geo-poetry
+	HTTP Methods supported: POST
+	@type location: application/json (POST data)
+	@param location: A JSON object with 4 attributes: 'latitude' (float), 'longitude' (float), 'radius' (int), imperial_units (bool)
+	@rtype: application/json
+	@return: A JSON object with 2 attributes: 'poetry' (the generated poetry as string), 'track' (spotify URI)
+	"""
 	try:
 		json_data = request.get_json()
 		latitude = float(json_data['latitude'])
