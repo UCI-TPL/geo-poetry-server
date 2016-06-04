@@ -75,31 +75,28 @@ def get_geo_poetry():
 		app.logger.warning('geo-poetry given a non-boolean for imperial_units')
 		abort(400)
 
-	# Fetch Tweets
+	# ===== Fetch Tweets =====
 	tweets = geo_twitter.GeoTweets(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
-
-	# Generate poetry
-	tweets_count_dict = {'count': 0} # We have to use closure so we can modify it in the function, and read it outside
-	def tweet_limitor(generator, count_dict):
+	# because both the Markov generator and sentiment analyzer need the tweets,
+	#  we have to store them instead of using an iterator
+	def tweet_limitor(generator):
 		for i in range(MAX_TWEETS_TO_READ):
-			count_dict['count'] += 1
-			try:
-				yield generator.next()
-			except StopIteration:
-				count_dict['count'] -= 1
-				raise StopIteration
-	poems = markov_text.MarkovGenerator(tweet_limitor(tweets.Tweets(location), tweets_count_dict), MARKOV_DEPTH, ":memory:")
-	if tweets_count_dict['count'] < MIN_TWEETS_TO_READ:
+			yield generator.next()
+	tweets_list = [tweet for tweet in tweet_limitor(tweets.Tweets(location))]
+	if len(tweets_list) < MIN_TWEETS_TO_READ:
 		# If we hit Twitter's rate limit, tweets.Tweets(location) will raise StopIteration early
 		abort(429)
+
+	# ===== Generate Poetry =====
+	poems = markov_text.MarkovGenerator(tweets_list, MARKOV_DEPTH, ":memory:")
 	poetry = '\n'.join([poems.next() for _ in range(POEM_LINES_TO_GENERATE)])
 
 	# TODO Get music recommendations
 
-	# Build JSON Response
+	# ===== Build JSON Response =====
 	response = {}
 	response[RESPONSE_KEY_POETRY] = poetry
-	response[RESPONSE_KEY_TWEETS_READ_COUNT] = tweets_count_dict['count']
+	response[RESPONSE_KEY_TWEETS_READ_COUNT] = len(tweets_list)
 	return jsonify(response)
 
 

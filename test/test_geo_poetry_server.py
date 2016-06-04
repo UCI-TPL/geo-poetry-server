@@ -186,23 +186,16 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator):
 		if not obj.imperial_units == True:
 			return False
 		return True
-	def check_tweet_iterator(obj):
-		# NOTE: not only does this check that the right list is passed to MarkovGenerator(...),
-		#  it runs the tweet_limitor generator, which must be done because of its side effects
-		#  (namely, it counts the number of tweets read)
-		if list(obj) == ['Tweet 1', 'Tweet 2']:
-			return True
-		return False
 	(MockGeoTweets.expects_call()
 		.with_args(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
 		.returns_fake()
 		.expects('Tweets').with_args(arg.passes_test(check_location_obj))
 		.returns(fake_tweets_list))
+	
 	(MockMarkovGenerator.expects_call()
-		.with_args(arg.passes_test(check_tweet_iterator), MARKOV_DEPTH, ':memory:')
+		.with_args(['Tweet 1', 'Tweet 2'], MARKOV_DEPTH, ':memory:')
 		.returns_fake()
 		.expects('next').times_called(POEM_LINES_TO_GENERATE).returns(fake_poetry_line))
-
 	response = client.post("/geo-poetry", data=json.dumps({
 			'latitude' : 0.0,
 			'longitude' : 0.0,
@@ -218,7 +211,7 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator):
 	geo_poetry_server.MIN_TWEETS_TO_READ = prev_min_tweets
 
 @fudge.patch('geo_twitter.GeoTweets', 'markov_text.MarkovGenerator')
-def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator):
+def test_get_geo_poetry_rate_limit(MockGeoTweets, MockMarkovGenerator):
 	"""
 	The get_geo_poetry method returns 429 Too Many Requests if the tweet count is below MIN_TWEETS_TO_READ.
 
@@ -242,21 +235,11 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator):
 		if not obj.imperial_units == True:
 			return False
 		return True
-	def check_tweet_iterator(obj):
-		# NOTE: not only does this check that the right list is passed to MarkovGenerator(...),
-		#  it runs the tweet_limitor generator, which must be done because of its side effects
-		#  (namely, it counts the number of tweets read)
-		if list(obj) == ['Tweet 1', 'Tweet 2']:
-			return True
-		return False
 	(MockGeoTweets.expects_call()
 		.with_args(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
 		.returns_fake()
 		.expects('Tweets').with_args(arg.passes_test(check_location_obj))
 		.returns(fake_tweets_list))
-	(MockMarkovGenerator.expects_call()
-		.with_args(arg.passes_test(check_tweet_iterator), MARKOV_DEPTH, ':memory:')
-		.returns_fake())
 
 	response = client.post("/geo-poetry", data=json.dumps({
 			'latitude' : 0.0,
@@ -268,6 +251,58 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator):
 
 	# Set MIN_TWEETS_TO_READ back to normal
 	geo_poetry_server.MIN_TWEETS_TO_READ = prev_min_tweets
+
+@fudge.patch('geo_twitter.GeoTweets', 'markov_text.MarkovGenerator')
+def test_get_geo_poetry_tweet_limiting(MockGeoTweets, MockMarkovGenerator):
+	"""
+	The get_geo_poetry method correctly truncates the tweet list to MAX_TWEETS_TO_READ.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
+	# Temporarily set correct minimum & maximum number of tweets to read
+	prev_min_tweets = geo_poetry_server.MIN_TWEETS_TO_READ
+	prev_max_tweets = geo_poetry_server.MAX_TWEETS_TO_READ
+	geo_poetry_server.MIN_TWEETS_TO_READ = 0
+	geo_poetry_server.MAX_TWEETS_TO_READ = 1
+	fake_tweets_list = iter(['Tweet 1', 'Tweet 2'])
+	fake_poetry_line = 'A Line Of CG Poetry.'
+	def check_location_obj(obj):
+		if not isinstance(obj, Location):
+			return False
+		if not obj.latitude == 0.0:
+			return False
+		if not obj.longitude == 0.0:
+			return False
+		if not obj.radius == 10:
+			return False
+		if not obj.imperial_units == True:
+			return False
+		return True
+	(MockGeoTweets.expects_call()
+		.with_args(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
+		.returns_fake()
+		.expects('Tweets').with_args(arg.passes_test(check_location_obj))
+		.returns(fake_tweets_list))
+	(MockMarkovGenerator.expects_call()
+		.with_args(['Tweet 1'], MARKOV_DEPTH, ':memory:')
+		.returns_fake()
+		.expects('next').times_called(POEM_LINES_TO_GENERATE).returns(fake_poetry_line))
+
+	response = client.post("/geo-poetry", data=json.dumps({
+			'latitude' : 0.0,
+			'longitude' : 0.0,
+			'radius' : 10,
+			'imperial_units' : True}),
+		content_type='application/json')
+	response_json = json.loads(response.get_data())
+	assert response.status_code == 200
+	assert response_json[RESPONSE_KEY_POETRY] == '\n'.join([fake_poetry_line for _ in range(POEM_LINES_TO_GENERATE)])
+	assert response_json[RESPONSE_KEY_TWEETS_READ_COUNT] == 1
+
+	# Set MIN_TWEETS_TO_READ and MAX_TWEETS_TO_READ back to normal
+	geo_poetry_server.MIN_TWEETS_TO_READ = prev_min_tweets
+	geo_poetry_server.MAX_TWEETS_TO_READ = prev_max_tweets
 
 
 if __name__ == '__main__':
