@@ -8,8 +8,7 @@ from ConfigParser import SafeConfigParser
 from common_types import Location
 import geo_twitter
 import markov_text
-import os
-import tempfile
+import vaderSentiment.vaderSentiment
 
 # The actual consumer key & secret are read from a config file during startup,
 # but we need unique values here for testing purposes. See test/test_geo_poetry_server.py
@@ -22,8 +21,10 @@ MARKOV_DEPTH = 2
 POEM_LINES_TO_GENERATE = 3
 RESPONSE_KEY_POETRY = 'poetry'
 RESPONSE_KEY_TWEETS_READ_COUNT = 'num_source_tweets'
+RESPONSE_KEY_AVG_SENTIMENT = 'sentiment'
 DEFAULT_RADIUS = 10
 DEFAULT_IMPERIAL_UNITS = False
+SENTIMENT_MIN_MAGNITUDE = 0.2
 
 app = Flask(__name__)
 
@@ -50,6 +51,8 @@ def get_geo_poetry():
 	@rtype: application/json
 	@return: A JSON object with 2 attributes: 'poetry' (the generated poetry as string), 'track' (spotify URI)
 	"""
+	getSentiment = vaderSentiment.vaderSentiment.sentiment
+	
 	try:
 		json_data = request.get_json()
 		if json_data == None:
@@ -89,7 +92,21 @@ def get_geo_poetry():
 
 	# ===== Generate Poetry =====
 	poems = markov_text.MarkovGenerator(tweets_list, MARKOV_DEPTH, ":memory:")
-	poetry = '\n'.join([poems.next() for _ in range(POEM_LINES_TO_GENERATE)])
+	poetry = "\n".join([poems.next() for _ in range(POEM_LINES_TO_GENERATE)])
+
+	# ===== Sentiment Analysis =====
+	total_sentiment = 0
+	sentiment_included_count = 0
+	for tweet in tweets_list:
+		vs = getSentiment(tweet)
+		# In order to give more variability to the results, we ignore relatively neutral tweets
+		if (vs['compound'] > SENTIMENT_MIN_MAGNITUDE) or (vs['compound'] < -SENTIMENT_MIN_MAGNITUDE):
+			total_sentiment += vs['compound']
+			sentiment_included_count += 1
+	try:
+		avg_sentiment = total_sentiment / float(sentiment_included_count)
+	except ZeroDivisionError:
+		avg_sentiment = 0.0
 
 	# TODO Get music recommendations
 
@@ -97,6 +114,7 @@ def get_geo_poetry():
 	response = {}
 	response[RESPONSE_KEY_POETRY] = poetry
 	response[RESPONSE_KEY_TWEETS_READ_COUNT] = len(tweets_list)
+	response[RESPONSE_KEY_AVG_SENTIMENT] = avg_sentiment
 	return jsonify(response)
 
 

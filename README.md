@@ -20,6 +20,15 @@ All of the Python modules are also available directly through PIP, the Python
 package management system [https://pypi.python.org/pypi/pip](https://pypi.python.org/pypi/pip).
 
 
+Credits
+-------
+
+In addition to the packages listed in the system requirements, Geo-Poetry 
+uses modified versions of the following open-source projects:
+* **markov-text**, a Python markov-chain text generator tool [https://github.com/codebox/markov-text](https://github.com/codebox/markov-text). It was modified to an externally usable package (it was only usable as a command-line utility), and some changes were made to how it splits words, in order to support contractions and abbreviations.
+* **VADER-Sentiment-Analysis**, a Python sentiment analysis tool [https://github.com/cjhutto/vaderSentiment](https://github.com/cjhutto/vaderSentiment). It was modified to support unicode.
+
+
 Client Usage
 ------------
 

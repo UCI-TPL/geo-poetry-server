@@ -9,8 +9,8 @@ sys.path.append(parent_dir)
 
 import pytest
 import geo_poetry_server
-from geo_poetry_server import app, TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET
-from geo_poetry_server import MARKOV_DEPTH, POEM_LINES_TO_GENERATE, RESPONSE_KEY_POETRY, RESPONSE_KEY_TWEETS_READ_COUNT
+from geo_poetry_server import app, TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET, MARKOV_DEPTH, POEM_LINES_TO_GENERATE
+from geo_poetry_server import RESPONSE_KEY_POETRY, RESPONSE_KEY_TWEETS_READ_COUNT, RESPONSE_KEY_AVG_SENTIMENT, SENTIMENT_MIN_MAGNITUDE
 from flask import json
 import fudge
 from fudge.inspector import arg
@@ -161,8 +161,8 @@ def test_get_geo_poetry_bad_imperial_units():
 		content_type='application/json')
 	assert response.status_code == 400
 
-@fudge.patch('geo_twitter.GeoTweets', 'markov_text.MarkovGenerator')
-def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator):
+@fudge.patch('geo_twitter.GeoTweets', 'markov_text.MarkovGenerator', 'vaderSentiment.vaderSentiment.sentiment')
+def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator, MockGetSentiment):
 	"""
 	The get_geo_poetry method works as expected when given valid input.
 
@@ -191,11 +191,16 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator):
 		.returns_fake()
 		.expects('Tweets').with_args(arg.passes_test(check_location_obj))
 		.returns(fake_tweets_list))
-	
 	(MockMarkovGenerator.expects_call()
 		.with_args(['Tweet 1', 'Tweet 2'], MARKOV_DEPTH, ':memory:')
 		.returns_fake()
 		.expects('next').times_called(POEM_LINES_TO_GENERATE).returns(fake_poetry_line))
+	(MockGetSentiment.expects_call()
+		.with_args('Tweet 1')
+		.returns({'compound': SENTIMENT_MIN_MAGNITUDE + 0.01})
+		.next_call().with_args('Tweet 2')
+		.returns({'compound': -(SENTIMENT_MIN_MAGNITUDE + 0.01)}))
+
 	response = client.post("/geo-poetry", data=json.dumps({
 			'latitude' : 0.0,
 			'longitude' : 0.0,
@@ -206,6 +211,7 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator):
 	assert response.status_code == 200
 	assert response_json[RESPONSE_KEY_POETRY] == '\n'.join([fake_poetry_line for _ in range(POEM_LINES_TO_GENERATE)])
 	assert response_json[RESPONSE_KEY_TWEETS_READ_COUNT] == 2
+	assert response_json[RESPONSE_KEY_AVG_SENTIMENT] == 0.0
 
 	# Set MIN_TWEETS_TO_READ back to normal
 	geo_poetry_server.MIN_TWEETS_TO_READ = prev_min_tweets
@@ -252,8 +258,8 @@ def test_get_geo_poetry_rate_limit(MockGeoTweets, MockMarkovGenerator):
 	# Set MIN_TWEETS_TO_READ back to normal
 	geo_poetry_server.MIN_TWEETS_TO_READ = prev_min_tweets
 
-@fudge.patch('geo_twitter.GeoTweets', 'markov_text.MarkovGenerator')
-def test_get_geo_poetry_tweet_limiting(MockGeoTweets, MockMarkovGenerator):
+@fudge.patch('geo_twitter.GeoTweets', 'markov_text.MarkovGenerator', 'vaderSentiment.vaderSentiment.sentiment')
+def test_get_geo_poetry_tweet_limiting(MockGeoTweets, MockMarkovGenerator, MockGetSentiment):
 	"""
 	The get_geo_poetry method correctly truncates the tweet list to MAX_TWEETS_TO_READ.
 
@@ -288,6 +294,9 @@ def test_get_geo_poetry_tweet_limiting(MockGeoTweets, MockMarkovGenerator):
 		.with_args(['Tweet 1'], MARKOV_DEPTH, ':memory:')
 		.returns_fake()
 		.expects('next').times_called(POEM_LINES_TO_GENERATE).returns(fake_poetry_line))
+	(MockGetSentiment.expects_call()
+		.with_args('Tweet 1')
+		.returns({'compound': SENTIMENT_MIN_MAGNITUDE + 0.01}))
 
 	response = client.post("/geo-poetry", data=json.dumps({
 			'latitude' : 0.0,
@@ -299,10 +308,66 @@ def test_get_geo_poetry_tweet_limiting(MockGeoTweets, MockMarkovGenerator):
 	assert response.status_code == 200
 	assert response_json[RESPONSE_KEY_POETRY] == '\n'.join([fake_poetry_line for _ in range(POEM_LINES_TO_GENERATE)])
 	assert response_json[RESPONSE_KEY_TWEETS_READ_COUNT] == 1
+	assert response_json[RESPONSE_KEY_AVG_SENTIMENT] == SENTIMENT_MIN_MAGNITUDE + 0.01
 
 	# Set MIN_TWEETS_TO_READ and MAX_TWEETS_TO_READ back to normal
 	geo_poetry_server.MIN_TWEETS_TO_READ = prev_min_tweets
 	geo_poetry_server.MAX_TWEETS_TO_READ = prev_max_tweets
+
+@fudge.patch('geo_twitter.GeoTweets', 'markov_text.MarkovGenerator', 'vaderSentiment.vaderSentiment.sentiment')
+def test_get_geo_poetry_min_sentiment_magnitude(MockGeoTweets, MockMarkovGenerator, MockGetSentiment):
+	"""
+	The get_geo_poetry method excludes sentiments with absolute value less than SENTIMENT_MIN_MAGNITUDE from the average sentiment.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
+	# Temporarily set low enough minimum number of tweets to read
+	prev_min_tweets = geo_poetry_server.MIN_TWEETS_TO_READ
+	geo_poetry_server.MIN_TWEETS_TO_READ = 0
+	fake_tweets_list = iter(['Tweet 1', 'Tweet 2'])
+	fake_poetry_line = 'A Line Of CG Poetry.'
+	def check_location_obj(obj):
+		if not isinstance(obj, Location):
+			return False
+		if not obj.latitude == 0.0:
+			return False
+		if not obj.longitude == 0.0:
+			return False
+		if not obj.radius == 10:
+			return False
+		if not obj.imperial_units == True:
+			return False
+		return True
+	(MockGeoTweets.expects_call()
+		.with_args(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
+		.returns_fake()
+		.expects('Tweets').with_args(arg.passes_test(check_location_obj))
+		.returns(fake_tweets_list))
+	(MockMarkovGenerator.expects_call()
+		.with_args(['Tweet 1', 'Tweet 2'], MARKOV_DEPTH, ':memory:')
+		.returns_fake()
+		.expects('next').times_called(POEM_LINES_TO_GENERATE).returns(fake_poetry_line))
+	(MockGetSentiment.expects_call()
+		.with_args('Tweet 1')
+		.returns({'compound': SENTIMENT_MIN_MAGNITUDE + 0.01})
+		.next_call().with_args('Tweet 2')
+		.returns({'compound': SENTIMENT_MIN_MAGNITUDE - 0.01}))
+
+	response = client.post("/geo-poetry", data=json.dumps({
+			'latitude' : 0.0,
+			'longitude' : 0.0,
+			'radius' : 10,
+			'imperial_units' : True}),
+		content_type='application/json')
+	response_json = json.loads(response.get_data())
+	assert response.status_code == 200
+	assert response_json[RESPONSE_KEY_POETRY] == '\n'.join([fake_poetry_line for _ in range(POEM_LINES_TO_GENERATE)])
+	assert response_json[RESPONSE_KEY_TWEETS_READ_COUNT] == 2
+	assert response_json[RESPONSE_KEY_AVG_SENTIMENT] == SENTIMENT_MIN_MAGNITUDE + 0.01
+
+	# Set MIN_TWEETS_TO_READ back to normal
+	geo_poetry_server.MIN_TWEETS_TO_READ = prev_min_tweets
 
 
 if __name__ == '__main__':
