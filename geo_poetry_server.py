@@ -24,6 +24,7 @@ RESPONSE_KEY_POETRY = 'poetry'
 RESPONSE_KEY_TWEETS_READ_COUNT = 'num_source_tweets'
 RESPONSE_KEY_AVG_SENTIMENT = 'sentiment'
 RESPONSE_KEY_TRACK = 'track'
+RESPONSE_KEY_GENRE = 'genre'
 
 MAX_TWEETS_TO_READ = 500
 MIN_TWEETS_TO_READ = 100
@@ -167,6 +168,7 @@ def get_geo_poetry():
 	response[RESPONSE_KEY_TWEETS_READ_COUNT] = len(tweets_list)
 	response[RESPONSE_KEY_AVG_SENTIMENT] = avg_sentiment
 	response[RESPONSE_KEY_TRACK] = spotify_track_url
+	response[RESPONSE_KEY_GENRE] = genre
 	return jsonify(response)
 
 

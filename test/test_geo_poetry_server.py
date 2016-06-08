@@ -257,6 +257,7 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator, MockGetSentiment, Mo
 	assert response_json[RESPONSE_KEY_TWEETS_READ_COUNT] == 2
 	assert response_json[RESPONSE_KEY_AVG_SENTIMENT] == 0.0
 	assert response_json[RESPONSE_KEY_TRACK] == fake_spotify_url
+	assert response_json[RESPONSE_KEY_GENRE] == fake_genre
 
 	# Set MIN_TWEETS_TO_READ back to normal
 	geo_poetry_server.MIN_TWEETS_TO_READ = prev_min_tweets
@@ -375,6 +376,7 @@ def test_get_geo_poetry_tweet_limiting(MockGeoTweets, MockMarkovGenerator, MockG
 	assert response_json[RESPONSE_KEY_TWEETS_READ_COUNT] == 1
 	assert response_json[RESPONSE_KEY_AVG_SENTIMENT] == SENTIMENT_MIN_MAGNITUDE + 0.01
 	assert response_json[RESPONSE_KEY_TRACK] == fake_spotify_url
+	assert response_json[RESPONSE_KEY_GENRE] == SPOTIFY_DEFAULT_GENRE
 
 	# Set MIN_TWEETS_TO_READ and MAX_TWEETS_TO_READ back to normal
 	geo_poetry_server.MIN_TWEETS_TO_READ = prev_min_tweets
@@ -452,6 +454,7 @@ def test_get_geo_poetry_min_sentiment_magnitude(MockGeoTweets, MockMarkovGenerat
 	assert response_json[RESPONSE_KEY_TWEETS_READ_COUNT] == 2
 	assert response_json[RESPONSE_KEY_AVG_SENTIMENT] == SENTIMENT_MIN_MAGNITUDE + 0.01
 	assert response_json[RESPONSE_KEY_TRACK] == fake_spotify_url
+	assert response_json[RESPONSE_KEY_GENRE] == SPOTIFY_DEFAULT_GENRE
 
 	# Set MIN_TWEETS_TO_READ back to normal
 	geo_poetry_server.MIN_TWEETS_TO_READ = prev_min_tweets
