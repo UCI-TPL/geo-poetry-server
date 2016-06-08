@@ -9,22 +9,33 @@ from common_types import Location
 import geo_twitter
 import markov_text
 import vaderSentiment.vaderSentiment
+import spotipy
+import spotipy.oauth2
 
-# The actual consumer key & secret are read from a config file during startup,
+# The actual credentials are read from a config file during startup,
 # but we need unique values here for testing purposes. See test/test_geo_poetry_server.py
 TWITTER_CONSUMER_KEY = "TwitterConsumerKey"
 TWITTER_CONSUMER_SECRET = "TwitterConsumerSecret"
-CONF_FILE_PATH = "scratch/twitter.conf" # TODO Change location in production.
+SPOTIFY_CLIENT_ID = "SpotifyClientID"
+SPOTIFY_CLIENT_SECRET = "SpotifyClientSecret"
+CONF_FILE_PATH = "scratch/server.conf" # TODO Change location in production.
+
+RESPONSE_KEY_POETRY = 'poetry'
+RESPONSE_KEY_TWEETS_READ_COUNT = 'num_source_tweets'
+RESPONSE_KEY_AVG_SENTIMENT = 'sentiment'
+RESPONSE_KEY_TRACK = 'track'
+
 MAX_TWEETS_TO_READ = 500
 MIN_TWEETS_TO_READ = 100
 MARKOV_DEPTH = 2
 POEM_LINES_TO_GENERATE = 3
-RESPONSE_KEY_POETRY = 'poetry'
-RESPONSE_KEY_TWEETS_READ_COUNT = 'num_source_tweets'
-RESPONSE_KEY_AVG_SENTIMENT = 'sentiment'
+
 DEFAULT_RADIUS = 10
 DEFAULT_IMPERIAL_UNITS = False
 SENTIMENT_MIN_MAGNITUDE = 0.2
+SPOTIFY_DEFAULT_GENRE = 'ambient'
+SPOTIFY_MIN_INSTRUMENTALNESS = 0.9
+
 
 app = Flask(__name__)
 
@@ -52,6 +63,7 @@ def get_geo_poetry():
 	@return: A JSON object with 2 attributes: 'poetry' (the generated poetry as string), 'track' (spotify URI)
 	"""
 	getSentiment = vaderSentiment.vaderSentiment.sentiment
+	SpotifyClientCredentials = spotipy.oauth2.SpotifyClientCredentials
 	
 	try:
 		json_data = request.get_json()
@@ -109,12 +121,23 @@ def get_geo_poetry():
 		avg_sentiment = 0.0
 
 	# TODO Get music recommendations
+	# ===== Music Recommendations =====
+	client_credentials_manager = SpotifyClientCredentials(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET)
+	spotify = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+	normalized_sentiment = (avg_sentiment + 1.0) / 2.0 # from range [-1, 1] to range [0, 1]
+	spotify_response = spotify.recommendations(
+		seed_genres = [SPOTIFY_DEFAULT_GENRE], #TODO Accept as method argument
+		limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
+		target_energy = 0.5, #TODO Sine wave variation (needs session management)
+		target_valence = normalized_sentiment)
+	spotify_track_url = spotify_response['tracks'][0]['external_urls']['spotify']
 
 	# ===== Build JSON Response =====
 	response = {}
 	response[RESPONSE_KEY_POETRY] = poetry
 	response[RESPONSE_KEY_TWEETS_READ_COUNT] = len(tweets_list)
 	response[RESPONSE_KEY_AVG_SENTIMENT] = avg_sentiment
+	response[RESPONSE_KEY_TRACK] = spotify_track_url
 	return jsonify(response)
 
 
@@ -124,6 +147,8 @@ if __name__ == "__main__":
 	conf.read(CONF_FILE_PATH)
 	TWITTER_CONSUMER_KEY = conf.get('Twitter', 'consumer_key')
 	TWITTER_CONSUMER_SECRET = conf.get('Twitter', 'consumer_secret')
+	SPOTIFY_CLIENT_ID = conf.get('Spotify', 'client_id')
+	SPOTIFY_CLIENT_SECRET = conf.get('Spotify', 'client_secret')
 
 	app.debug = True #TODO Do NOT use debug mode in production
 	app.run()

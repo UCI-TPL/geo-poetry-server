@@ -11,6 +11,7 @@ System Requirements
 * **Python 2.7** [https://www.python.org/](https://www.python.org/)
 * **Flask**, a web microframework for Python [http://flask.pocoo.org/](http://flask.pocoo.org/)
 * **Twython**, a Python wrapper for the Twitter API [https://github.com/ryanmcgrath/twython](https://github.com/ryanmcgrath/twython)
+* **Spotipy**, a Python wrapper for the Spotify API [https://github.com/plamere/spotipy](https://github.com/plamere/spotipy)
 
 Unit tests also require:
 * **pytest**, a testing framework [http://pytest.org/](http://pytest.org/)
@@ -46,7 +47,7 @@ The server exposes an API with two methods.
 	* "latitude" - *Required.* The GPS latitude coordinate, as a floating-point number or a string.
 	* "longitude" - *Required.* The GPS longitude coordinate, as a floating-point number or a string.
 	* "radius" - *Optional.* The radius within which to search, as a number or a string. The default is 10km.
-	* "imperial_units" - *Optional* A boolean - if true, use miles for the radius; if false, use kilometers.
+	* "imperial_units" - *Optional.* A boolean - if true, use miles for the radius; if false, use kilometers.
 
 	POST data must be sent with the *application/json* mime-type. For security
 	of the transmitted GPS coordinates, HTTPS is required. It returns JSON with
