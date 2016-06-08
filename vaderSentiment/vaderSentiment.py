@@ -205,21 +205,21 @@ def sentiment(text):
                 # future work: consider other sentiment-laden idioms
                 #other_idioms = {"back handed": -2, "blow smoke": -2, "blowing smoke": -2, "upper hand": 1, "break a leg": 2, 
                 #                "cooking with gas": 2, "in the black": 2, "in the red": -2, "on the ball": 2,"under the weather": -2}
-                onezero = "{} {}".format(wordsAndEmoticons[i-1], wordsAndEmoticons[i])
-                twoonezero = "{} {} {}".format(wordsAndEmoticons[i-2], wordsAndEmoticons[i-1], wordsAndEmoticons[i])
-                twoone = "{} {}".format(wordsAndEmoticons[i-2], wordsAndEmoticons[i-1])
-                threetwoone = "{} {} {}".format(wordsAndEmoticons[i-3], wordsAndEmoticons[i-2], wordsAndEmoticons[i-1])
-                threetwo = "{} {}".format(wordsAndEmoticons[i-3], wordsAndEmoticons[i-2])                    
+                onezero = u"{} {}".format(wordsAndEmoticons[i-1], wordsAndEmoticons[i])
+                twoonezero = u"{} {} {}".format(wordsAndEmoticons[i-2], wordsAndEmoticons[i-1], wordsAndEmoticons[i])
+                twoone = u"{} {}".format(wordsAndEmoticons[i-2], wordsAndEmoticons[i-1])
+                threetwoone = u"{} {} {}".format(wordsAndEmoticons[i-3], wordsAndEmoticons[i-2], wordsAndEmoticons[i-1])
+                threetwo = u"{} {}".format(wordsAndEmoticons[i-3], wordsAndEmoticons[i-2])                    
                 if onezero in special_case_idioms: v = special_case_idioms[onezero]
                 elif twoonezero in special_case_idioms: v = special_case_idioms[twoonezero]
                 elif twoone in special_case_idioms: v = special_case_idioms[twoone]
                 elif threetwoone in special_case_idioms: v = special_case_idioms[threetwoone]
                 elif threetwo in special_case_idioms: v = special_case_idioms[threetwo]
                 if len(wordsAndEmoticons)-1 > i:
-                    zeroone = "{} {}".format(wordsAndEmoticons[i], wordsAndEmoticons[i+1])
+                    zeroone = u"{} {}".format(wordsAndEmoticons[i], wordsAndEmoticons[i+1])
                     if zeroone in special_case_idioms: v = special_case_idioms[zeroone]
                 if len(wordsAndEmoticons)-1 > i+1:
-                    zeroonetwo = "{} {}".format(wordsAndEmoticons[i], wordsAndEmoticons[i+1], wordsAndEmoticons[i+2])
+                    zeroonetwo = u"{} {}".format(wordsAndEmoticons[i], wordsAndEmoticons[i+1], wordsAndEmoticons[i+2])
                     if zeroonetwo in special_case_idioms: v = special_case_idioms[zeroonetwo]
                 
                 # check for booster/dampener bi-grams such as 'sort of' or 'kind of'
