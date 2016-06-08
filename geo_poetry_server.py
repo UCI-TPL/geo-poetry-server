@@ -57,8 +57,13 @@ def get_geo_poetry():
 
 	Route: /geo-poetry
 	HTTP Methods supported: POST
-	@type location: application/json (POST data)
-	@param location: A JSON object with 4 attributes: 'latitude' (float), 'longitude' (float), 'radius' (int), imperial_units (bool)
+	@type arguments: application/json (POST data)
+	@param arguments: A JSON object with 5 attributes:
+		'latitude' (float) - required,
+		'longitude' (float) - required,
+		'radius' (int) - optional, default 10,
+		'imperial_units' (bool) - optional, default False
+		'genre' (string) - optional, default "ambient"
 	@rtype: application/json
 	@return: A JSON object with 2 attributes: 'poetry' (the generated poetry as string), 'track' (spotify URI)
 	"""
@@ -80,6 +85,10 @@ def get_geo_poetry():
 			radius = DEFAULT_RADIUS
 			imperial_units = DEFAULT_IMPERIAL_UNITS
 		location = Location(latitude, longitude, radius, imperial_units)
+		try:
+			genre = json_data['genre']
+		except KeyError:
+			genre = SPOTIFY_DEFAULT_GENRE
 	except KeyError as err:
 		app.logger.warning('geo-poetry request missing '+err.message) #err.message will be 'longitude' or 'latitude'
 		abort(400)
@@ -126,11 +135,16 @@ def get_geo_poetry():
 	spotify = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
 	normalized_sentiment = (avg_sentiment + 1.0) / 2.0 # from range [-1, 1] to range [0, 1]
 	spotify_response = spotify.recommendations(
-		seed_genres = [SPOTIFY_DEFAULT_GENRE], #TODO Accept as method argument
+		seed_genres = [genre],
 		limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
 		target_energy = 0.5, #TODO Sine wave variation (needs session management)
 		target_valence = normalized_sentiment)
-	spotify_track_url = spotify_response['tracks'][0]['external_urls']['spotify']
+	try:
+		spotify_track_url = spotify_response['tracks'][0]['external_urls']['spotify']
+	except IndexError:
+		# If the given genre doesn't exist, Spotify returns an empty list of tracks.
+		app.logger.warning('No tracks returned from Spotify. Probably unknown genre: "' + genre + '"')
+		abort(400)
 
 	# ===== Build JSON Response =====
 	response = {}

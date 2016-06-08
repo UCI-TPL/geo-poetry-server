@@ -176,6 +176,7 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator, MockGetSentiment, Mo
 	fake_tweets_list = iter(['Tweet 1', 'Tweet 2'])
 	fake_poetry_line = 'A Line Of CG Poetry.'
 	fake_spotify_url = 'http://www.example.com'
+	fake_genre = 'MyGenre'
 	def check_location_obj(obj):
 		if not isinstance(obj, Location):
 			return False
@@ -209,7 +210,7 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator, MockGetSentiment, Mo
 		.with_args(client_credentials_manager='Constant')
 		.returns_fake()
 		.expects('recommendations').with_args(
-			seed_genres = [SPOTIFY_DEFAULT_GENRE],
+			seed_genres = [fake_genre],
 			limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
 			target_energy=0.5, target_valence = ((0.0)+1.0)/2.0)
 		.returns({
@@ -224,7 +225,8 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator, MockGetSentiment, Mo
 			'latitude' : 0.0,
 			'longitude' : 0.0,
 			'radius' : 10,
-			'imperial_units' : True}),
+			'imperial_units' : True,
+			'genre' : fake_genre}),
 		content_type='application/json')
 	response_json = json.loads(response.get_data())
 	assert response.status_code == 200
@@ -427,6 +429,73 @@ def test_get_geo_poetry_min_sentiment_magnitude(MockGeoTweets, MockMarkovGenerat
 	assert response_json[RESPONSE_KEY_TWEETS_READ_COUNT] == 2
 	assert response_json[RESPONSE_KEY_AVG_SENTIMENT] == SENTIMENT_MIN_MAGNITUDE + 0.01
 	assert response_json[RESPONSE_KEY_TRACK] == fake_spotify_url
+
+	# Set MIN_TWEETS_TO_READ back to normal
+	geo_poetry_server.MIN_TWEETS_TO_READ = prev_min_tweets
+
+@fudge.patch('geo_twitter.GeoTweets', 'markov_text.MarkovGenerator', 
+	'vaderSentiment.vaderSentiment.sentiment', 'spotipy.oauth2.SpotifyClientCredentials',
+	'spotipy.Spotify')
+def test_get_geo_poetry_unknown_genre(MockGeoTweets, MockMarkovGenerator, MockGetSentiment, MockClientCredentials, MockSpotify):
+	"""
+	The get_geo_poetry method returns 400 Bad Request when Spotify returns no tracks.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
+	# Temporarily set low enough minimum number of tweets to read
+	prev_min_tweets = geo_poetry_server.MIN_TWEETS_TO_READ
+	geo_poetry_server.MIN_TWEETS_TO_READ = 0
+	fake_tweets_list = iter(['Tweet 1', 'Tweet 2'])
+	fake_poetry_line = 'A Line Of CG Poetry.'
+	fake_spotify_url = 'http://www.example.com'
+	fake_genre = 'MyGenre'
+	def check_location_obj(obj):
+		if not isinstance(obj, Location):
+			return False
+		if not obj.latitude == 0.0:
+			return False
+		if not obj.longitude == 0.0:
+			return False
+		if not obj.radius == 10:
+			return False
+		if not obj.imperial_units == True:
+			return False
+		return True
+	(MockGeoTweets.expects_call()
+		.with_args(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
+		.returns_fake()
+		.expects('Tweets').with_args(arg.passes_test(check_location_obj))
+		.returns(fake_tweets_list))
+	(MockMarkovGenerator.expects_call()
+		.with_args(['Tweet 1', 'Tweet 2'], MARKOV_DEPTH, ':memory:')
+		.returns_fake()
+		.expects('next').times_called(POEM_LINES_TO_GENERATE).returns(fake_poetry_line))
+	(MockGetSentiment.expects_call()
+		.with_args('Tweet 1')
+		.returns({'compound': SENTIMENT_MIN_MAGNITUDE + 0.01})
+		.next_call().with_args('Tweet 2')
+		.returns({'compound': -(SENTIMENT_MIN_MAGNITUDE + 0.01)}))
+	(MockClientCredentials.expects_call()
+		.with_args(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET)
+		.returns('Constant'))
+	(MockSpotify.expects_call()
+		.with_args(client_credentials_manager='Constant')
+		.returns_fake()
+		.expects('recommendations').with_args(
+			seed_genres = [fake_genre],
+			limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
+			target_energy=0.5, target_valence = ((0.0)+1.0)/2.0)
+		.returns({ 'tracks' : []}))
+
+	response = client.post("/geo-poetry", data=json.dumps({
+			'latitude' : 0.0,
+			'longitude' : 0.0,
+			'radius' : 10,
+			'imperial_units' : True,
+			'genre' : fake_genre}),
+		content_type='application/json')
+	assert response.status_code == 400
 
 	# Set MIN_TWEETS_TO_READ back to normal
 	geo_poetry_server.MIN_TWEETS_TO_READ = prev_min_tweets
