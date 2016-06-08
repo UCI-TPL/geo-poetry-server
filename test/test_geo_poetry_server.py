@@ -52,6 +52,29 @@ def test_get_geo_poetry_auth_failure(MockGeoTweets):
 			'imperial_units' : True}),
 		content_type='application/json')
 
+@fudge.patch('spotipy.oauth2.SpotifyClientCredentials', 'spotipy.Spotify')
+def test_get_genres(MockClientCredentials, MockSpotify):
+	"""
+	The get_genres method correctly returns a Spotify's genres list.
+
+	Functions tested:
+		- L{geo_poetry_server.get_genres}
+	"""
+	(MockClientCredentials.expects_call()
+		.with_args(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET)
+		.returns('Constant'))
+	(MockSpotify.expects_call()
+		.with_args(client_credentials_manager='Constant')
+		.returns_fake()
+		.expects('recommendation_genre_seeds').with_arg_count(0)
+		.returns({
+			'genres' : ['Genre 1', 'Genre 2']
+			}))
+
+	response = client.get("/get-genres")
+	response_json = json.loads(response.get_data())
+	assert response_json['genres'] == ['Genre 1', 'Genre 2']
+
 def test_get_geo_poetry_wrong_mime_type():
 	"""
 	The get_geo_poetry method returns 400 Bad Request if the POST data is not application/json.

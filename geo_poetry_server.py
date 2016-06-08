@@ -50,6 +50,21 @@ def ping():
 	"""
 	return jsonify({'up': True, 'version': "0.0"})
 
+@app.route("/get-genres")
+def get_genres():
+	"""
+	Server method that returns the list of genres available for Spotify's recommendations engine.
+
+	Route: /get-genres
+	HTTP Methods supported: GET
+	@return: A JSON object with the attribute 'generes', a list of strings.
+	"""
+	SpotifyClientCredentials = spotipy.oauth2.SpotifyClientCredentials
+	client_credentials_manager = SpotifyClientCredentials(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET)
+	spotify = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
+	spotify_response = spotify.recommendation_genre_seeds()
+	return jsonify(spotify_response)
+
 @app.route("/geo-poetry", methods=['POST'])
 def get_geo_poetry():
 	"""

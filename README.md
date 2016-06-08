@@ -48,6 +48,7 @@ The server exposes an API with two methods.
 	* "longitude" - *Required.* The GPS longitude coordinate, as a floating-point number or a string.
 	* "radius" - *Optional.* The radius within which to search, as a number or a string. The default is 10km.
 	* "imperial_units" - *Optional.* A boolean - if true, use miles for the radius; if false, use kilometers.
+	* "genre" - *Optional.* A string specifying the genre of music to select from. The default is "ambient". Use the */get-genres* method to get a list of available genres.
 
 	POST data must be sent with the *application/json* mime-type. For security
 	of the transmitted GPS coordinates, HTTPS is required. It returns JSON with
@@ -56,6 +57,11 @@ The server exposes an API with two methods.
 	* "poetry" - A string of computer-generated poetry.
 	* "track" - A Spotify URL for the mood music to play. (See the definition of Spotify URL at the Spotify API: [https://developer.spotify.com/web-api/user-guide/#spotify-uris-and-ids](https://developer.spotify.com/web-api/user-guide/#spotify-uris-and-ids))
 	* "num_source_tweets" - An integer specifying how many tweets were read. See the algorithm description.
+
+3. **/get-genres (GET)** - This method gives clients a list of the available genres for selecting music in.
+	It returns a JSON object with one field:
+
+	* "genres" - A list of strings, each of which is a valid argument to the "genre" parameter of the */geo-poetry* method.
 
 
 Algorithm Description
