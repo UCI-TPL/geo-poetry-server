@@ -12,6 +12,8 @@ import vaderSentiment.vaderSentiment
 import spotipy
 import spotipy.oauth2
 
+VERSION = "0.0"
+
 # The actual credentials are read from a config file during startup,
 # but we need unique values here for testing purposes. See test/test_geo_poetry_server.py
 TWITTER_CONSUMER_KEY = "TwitterConsumerKey"
@@ -49,7 +51,7 @@ def ping():
 	HTTP Methods supported: GET
 	@return: A JSON object with two attributes: 'up' (true), 'version' (a version string).
 	"""
-	return jsonify({'up': True, 'version': "0.0"})
+	return jsonify({'up': True, 'version': VERSION})
 
 @app.route("/get-genres")
 def get_genres():
