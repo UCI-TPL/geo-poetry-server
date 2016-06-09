@@ -49,6 +49,7 @@ The server exposes an API with two methods.
 	* "radius" - *Optional.* The radius within which to search, as a number or a string. The default is 10km.
 	* "imperial_units" - *Optional.* A boolean - if true, use miles for the radius; if false, use kilometers.
 	* "genre" - *Optional.* A string specifying the genre of music to select from. The default is "ambient". Use the */get-genres* method to get a list of available genres.
+	* "song_energy" - *Optional.* A floating-point number between 0 and 1 specifying the energeticness of the track to return. Allows clients to vary the music energy over time.
 
 	POST data must be sent with the *application/json* mime-type. For security
 	of the transmitted GPS coordinates, HTTPS is required. It returns JSON with

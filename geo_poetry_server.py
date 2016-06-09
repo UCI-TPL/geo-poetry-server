@@ -36,6 +36,7 @@ DEFAULT_IMPERIAL_UNITS = False
 SENTIMENT_MIN_MAGNITUDE = 0.2
 SPOTIFY_DEFAULT_GENRE = 'ambient'
 SPOTIFY_MIN_INSTRUMENTALNESS = 0.9
+SPOTIFY_DEFAULT_ENERGY = 0.5
 
 
 app = Flask(__name__)
@@ -80,6 +81,7 @@ def get_geo_poetry():
 		'radius' (int) - optional, default 10,
 		'imperial_units' (bool) - optional, default False
 		'genre' (string) - optional, default "ambient"
+		'energy' (string) - optional, default 0.5
 	@rtype: application/json
 	@return: A JSON object with 2 attributes: 'poetry' (the generated poetry as string), 'track' (spotify URI)
 	"""
@@ -105,6 +107,14 @@ def get_geo_poetry():
 			genre = json_data['genre']
 		except KeyError:
 			genre = SPOTIFY_DEFAULT_GENRE
+		try:
+			target_energy = float(json_data['song_energy'])
+			if target_energy < 0.0 or target_energy > 1.0:
+				abort(400)
+		except KeyError:
+			target_energy = SPOTIFY_DEFAULT_ENERGY
+		except ValueError: # floating point conversion failed
+			abort(400)
 	except KeyError as err:
 		app.logger.warning('geo-poetry request missing '+err.message) #err.message will be 'longitude' or 'latitude'
 		abort(400)
@@ -153,7 +163,7 @@ def get_geo_poetry():
 	spotify_response = spotify.recommendations(
 		seed_genres = [genre],
 		limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
-		target_energy = 0.5, #TODO Sine wave variation (needs session management)
+		target_energy = target_energy,
 		target_valence = normalized_sentiment)
 	try:
 		spotify_track_url = spotify_response['tracks'][0]['external_urls']['spotify']

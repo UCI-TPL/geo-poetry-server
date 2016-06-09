@@ -183,6 +183,46 @@ def test_get_geo_poetry_bad_imperial_units():
 		content_type='application/json')
 	assert response.status_code == 400
 
+def test_get_geo_poetry_bad_song_energy():
+	"""
+	The get_geo_poetry method returns 400 Bad Request if the song_energy attribute is not a float
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
+	response = client.post("/geo-poetry", data=json.dumps({
+			'latitude' : 0,
+			'longitude' : 0.0,
+			'radius' : 10,
+			'imperial_units' : True,
+			'song_energy' : "a"}),
+		content_type='application/json')
+	assert response.status_code == 400
+
+def test_get_geo_poetry_song_energy_out_of_range():
+	"""
+	The get_geo_poetry method returns 400 Bad Request if the song_energy attribute is not between 0 and 1.
+
+	Functions tested:
+		- L{geo_poetry_server.get_geo_poetry}
+	"""
+	response = client.post("/geo-poetry", data=json.dumps({
+			'latitude' : 0,
+			'longitude' : 0.0,
+			'radius' : 10,
+			'imperial_units' : True,
+			'song_energy' : -0.1}),
+		content_type='application/json')
+	assert response.status_code == 400
+	response = client.post("/geo-poetry", data=json.dumps({
+			'latitude' : 0,
+			'longitude' : 0.0,
+			'radius' : 10,
+			'imperial_units' : True,
+			'song_energy' : 1.1}),
+		content_type='application/json')
+	assert response.status_code == 400
+
 @fudge.patch('geo_twitter.GeoTweets', 'markov_text.MarkovGenerator', 
 	'vaderSentiment.vaderSentiment.sentiment', 'spotipy.oauth2.SpotifyClientCredentials',
 	'spotipy.Spotify')
@@ -200,6 +240,7 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator, MockGetSentiment, Mo
 	fake_poetry_line = 'A Line Of CG Poetry.'
 	fake_spotify_url = 'http://www.example.com'
 	fake_genre = 'MyGenre'
+	fake_target_energy = 0.2
 	def check_location_obj(obj):
 		if not isinstance(obj, Location):
 			return False
@@ -235,7 +276,7 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator, MockGetSentiment, Mo
 		.expects('recommendations').with_args(
 			seed_genres = [fake_genre],
 			limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
-			target_energy=0.5, target_valence = ((0.0)+1.0)/2.0)
+			target_energy=fake_target_energy, target_valence = ((0.0)+1.0)/2.0)
 		.returns({
 				'tracks' : [ {
 					'external_urls' : {
@@ -249,7 +290,8 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator, MockGetSentiment, Mo
 			'longitude' : 0.0,
 			'radius' : 10,
 			'imperial_units' : True,
-			'genre' : fake_genre}),
+			'genre' : fake_genre,
+			'song_energy' : fake_target_energy}),
 		content_type='application/json')
 	response_json = json.loads(response.get_data())
 	assert response.status_code == 200
@@ -355,7 +397,7 @@ def test_get_geo_poetry_tweet_limiting(MockGeoTweets, MockMarkovGenerator, MockG
 		.expects('recommendations').with_args(
 			seed_genres = [SPOTIFY_DEFAULT_GENRE],
 			limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
-			target_energy=0.5, target_valence = ((SENTIMENT_MIN_MAGNITUDE+0.01)+1.0)/2.0)
+			target_energy=SPOTIFY_DEFAULT_ENERGY, target_valence = ((SENTIMENT_MIN_MAGNITUDE+0.01)+1.0)/2.0)
 		.returns({
 				'tracks' : [ {
 					'external_urls' : {
@@ -433,7 +475,7 @@ def test_get_geo_poetry_min_sentiment_magnitude(MockGeoTweets, MockMarkovGenerat
 		.expects('recommendations').with_args(
 			seed_genres = [SPOTIFY_DEFAULT_GENRE],
 			limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
-			target_energy=0.5, target_valence = ((SENTIMENT_MIN_MAGNITUDE+0.01)+1.0)/2.0)
+			target_energy=SPOTIFY_DEFAULT_ENERGY, target_valence = ((SENTIMENT_MIN_MAGNITUDE+0.01)+1.0)/2.0)
 		.returns({
 				'tracks' : [ {
 					'external_urls' : {
@@ -511,7 +553,7 @@ def test_get_geo_poetry_unknown_genre(MockGeoTweets, MockMarkovGenerator, MockGe
 		.expects('recommendations').with_args(
 			seed_genres = [fake_genre],
 			limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
-			target_energy=0.5, target_valence = ((0.0)+1.0)/2.0)
+			target_energy=SPOTIFY_DEFAULT_ENERGY, target_valence = ((0.0)+1.0)/2.0)
 		.returns({ 'tracks' : []}))
 
 	response = client.post("/geo-poetry", data=json.dumps({
