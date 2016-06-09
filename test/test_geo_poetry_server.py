@@ -275,7 +275,7 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator, MockGetSentiment, Mo
 		.returns_fake()
 		.expects('recommendations').with_args(
 			seed_genres = [fake_genre],
-			limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
+			limit=1, target_instrumentalness=1.0,
 			target_energy=fake_target_energy, target_valence = ((0.0)+1.0)/2.0)
 		.returns({
 				'tracks' : [ {
@@ -396,7 +396,7 @@ def test_get_geo_poetry_tweet_limiting(MockGeoTweets, MockMarkovGenerator, MockG
 		.returns_fake()
 		.expects('recommendations').with_args(
 			seed_genres = [SPOTIFY_DEFAULT_GENRE],
-			limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
+			limit=1, target_instrumentalness=1.0,
 			target_energy=SPOTIFY_DEFAULT_ENERGY, target_valence = ((SENTIMENT_MIN_MAGNITUDE+0.01)+1.0)/2.0)
 		.returns({
 				'tracks' : [ {
@@ -474,7 +474,7 @@ def test_get_geo_poetry_min_sentiment_magnitude(MockGeoTweets, MockMarkovGenerat
 		.returns_fake()
 		.expects('recommendations').with_args(
 			seed_genres = [SPOTIFY_DEFAULT_GENRE],
-			limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
+			limit=1, target_instrumentalness=1.0,
 			target_energy=SPOTIFY_DEFAULT_ENERGY, target_valence = ((SENTIMENT_MIN_MAGNITUDE+0.01)+1.0)/2.0)
 		.returns({
 				'tracks' : [ {
@@ -552,7 +552,7 @@ def test_get_geo_poetry_unknown_genre(MockGeoTweets, MockMarkovGenerator, MockGe
 		.returns_fake()
 		.expects('recommendations').with_args(
 			seed_genres = [fake_genre],
-			limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
+			limit=1, target_instrumentalness=1.0,
 			target_energy=SPOTIFY_DEFAULT_ENERGY, target_valence = ((0.0)+1.0)/2.0)
 		.returns({ 'tracks' : []}))
 

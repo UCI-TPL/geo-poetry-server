@@ -35,7 +35,6 @@ DEFAULT_RADIUS = 10
 DEFAULT_IMPERIAL_UNITS = False
 SENTIMENT_MIN_MAGNITUDE = 0.2
 SPOTIFY_DEFAULT_GENRE = 'ambient'
-SPOTIFY_MIN_INSTRUMENTALNESS = 0.9
 SPOTIFY_DEFAULT_ENERGY = 0.5
 
 
@@ -162,7 +161,7 @@ def get_geo_poetry():
 	normalized_sentiment = (avg_sentiment + 1.0) / 2.0 # from range [-1, 1] to range [0, 1]
 	spotify_response = spotify.recommendations(
 		seed_genres = [genre],
-		limit=1, target_instrumentalness=1.0, min_instrumentalness=SPOTIFY_MIN_INSTRUMENTALNESS,
+		limit=1, target_instrumentalness=1.0,
 		target_energy = target_energy,
 		target_valence = normalized_sentiment)
 	try:
