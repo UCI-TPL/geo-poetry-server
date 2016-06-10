@@ -10,6 +10,7 @@ System Requirements
 -------------------
 * **Python 2.7** [https://www.python.org/](https://www.python.org/)
 * **Flask**, a web microframework for Python [http://flask.pocoo.org/](http://flask.pocoo.org/)
+* **Flask-CORS**, a Flask extension adding support for Cross-Origin Resource Sharing [https://github.com/corydolphin/flask-cors](https://github.com/corydolphin/flask-cors)
 * **Twython**, a Python wrapper for the Twitter API [https://github.com/ryanmcgrath/twython](https://github.com/ryanmcgrath/twython)
 * **Spotipy**, a Python wrapper for the Spotify API [https://github.com/plamere/spotipy](https://github.com/plamere/spotipy)
 

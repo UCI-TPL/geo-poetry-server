@@ -4,11 +4,11 @@ The main server program. Spins up a Flask instance with the necessary methods.
 Expects Twitter API keys to be stored in scratch/twitter.conf in the current working directory.
 """
 from flask import Flask, jsonify, request, abort
+from flask.ext.cors import CORS
 from ConfigParser import SafeConfigParser
 from common_types import Location
 import geo_twitter
 import markov_text
-from crossdomain import crossdomain
 import vaderSentiment.vaderSentiment
 import spotipy
 import spotipy.oauth2
@@ -42,9 +42,9 @@ SPOTIFY_DEFAULT_ENERGY = 0.5
 
 
 app = Flask(__name__)
+CORS(app)
 
 @app.route("/ping")
-@crossdomain(origin="*")
 def ping():
 	"""
 	Simple server ping method.
@@ -56,7 +56,6 @@ def ping():
 	return jsonify({'up': True, 'version': VERSION})
 
 @app.route("/get-genres")
-@crossdomain(origin="*")
 def get_genres():
 	"""
 	Server method that returns the list of genres available for Spotify's recommendations engine.
@@ -72,7 +71,6 @@ def get_genres():
 	return jsonify(spotify_response)
 
 @app.route("/geo-poetry", methods=['POST'])
-@crossdomain(origin="*")
 def get_geo_poetry():
 	"""
 	The main server method to fetch "poetry" and mood music.
