@@ -238,7 +238,7 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator, MockGetSentiment, Mo
 	geo_poetry_server.MIN_TWEETS_TO_READ = 0
 	fake_tweets_list = iter(['Tweet 1', 'Tweet 2'])
 	fake_poetry_line = 'A Line Of CG Poetry.'
-	fake_spotify_url = 'http://www.example.com'
+	fake_spotify_uri = 'spotify:track:example'
 	fake_genre = 'MyGenre'
 	fake_target_energy = 0.2
 	def check_location_obj(obj):
@@ -279,9 +279,7 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator, MockGetSentiment, Mo
 			target_energy=fake_target_energy, target_valence = ((0.0)+1.0)/2.0)
 		.returns({
 				'tracks' : [ {
-					'external_urls' : {
-						'spotify' : fake_spotify_url
-					}
+					'uri': fake_spotify_uri
 				}]
 			}))
 
@@ -298,7 +296,7 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator, MockGetSentiment, Mo
 	assert response_json[RESPONSE_KEY_POETRY] == '\n'.join([fake_poetry_line for _ in range(POEM_LINES_TO_GENERATE)])
 	assert response_json[RESPONSE_KEY_TWEETS_READ_COUNT] == 2
 	assert response_json[RESPONSE_KEY_AVG_SENTIMENT] == 0.0
-	assert response_json[RESPONSE_KEY_TRACK] == fake_spotify_url
+	assert response_json[RESPONSE_KEY_TRACK] == fake_spotify_uri
 	assert response_json[RESPONSE_KEY_GENRE] == fake_genre
 
 	# Set MIN_TWEETS_TO_READ back to normal
@@ -363,7 +361,7 @@ def test_get_geo_poetry_tweet_limiting(MockGeoTweets, MockMarkovGenerator, MockG
 	geo_poetry_server.MAX_TWEETS_TO_READ = 1
 	fake_tweets_list = iter(['Tweet 1', 'Tweet 2'])
 	fake_poetry_line = 'A Line Of CG Poetry.'
-	fake_spotify_url = 'http://www.example.com'
+	fake_spotify_uri = 'spotify:track:example'
 	def check_location_obj(obj):
 		if not isinstance(obj, Location):
 			return False
@@ -400,9 +398,7 @@ def test_get_geo_poetry_tweet_limiting(MockGeoTweets, MockMarkovGenerator, MockG
 			target_energy=SPOTIFY_DEFAULT_ENERGY, target_valence = ((SENTIMENT_MIN_MAGNITUDE+0.01)+1.0)/2.0)
 		.returns({
 				'tracks' : [ {
-					'external_urls' : {
-						'spotify' : fake_spotify_url
-					}
+					'uri': fake_spotify_uri
 				}]
 			}))
 
@@ -417,7 +413,7 @@ def test_get_geo_poetry_tweet_limiting(MockGeoTweets, MockMarkovGenerator, MockG
 	assert response_json[RESPONSE_KEY_POETRY] == '\n'.join([fake_poetry_line for _ in range(POEM_LINES_TO_GENERATE)])
 	assert response_json[RESPONSE_KEY_TWEETS_READ_COUNT] == 1
 	assert response_json[RESPONSE_KEY_AVG_SENTIMENT] == SENTIMENT_MIN_MAGNITUDE + 0.01
-	assert response_json[RESPONSE_KEY_TRACK] == fake_spotify_url
+	assert response_json[RESPONSE_KEY_TRACK] == fake_spotify_uri
 	assert response_json[RESPONSE_KEY_GENRE] == SPOTIFY_DEFAULT_GENRE
 
 	# Set MIN_TWEETS_TO_READ and MAX_TWEETS_TO_READ back to normal
@@ -439,7 +435,7 @@ def test_get_geo_poetry_min_sentiment_magnitude(MockGeoTweets, MockMarkovGenerat
 	geo_poetry_server.MIN_TWEETS_TO_READ = 0
 	fake_tweets_list = iter(['Tweet 1', 'Tweet 2'])
 	fake_poetry_line = 'A Line Of CG Poetry.'
-	fake_spotify_url = 'http://www.example.com'
+	fake_spotify_uri = 'spotify:track:example'
 	def check_location_obj(obj):
 		if not isinstance(obj, Location):
 			return False
@@ -478,9 +474,7 @@ def test_get_geo_poetry_min_sentiment_magnitude(MockGeoTweets, MockMarkovGenerat
 			target_energy=SPOTIFY_DEFAULT_ENERGY, target_valence = ((SENTIMENT_MIN_MAGNITUDE+0.01)+1.0)/2.0)
 		.returns({
 				'tracks' : [ {
-					'external_urls' : {
-						'spotify' : fake_spotify_url
-					}
+					'uri': fake_spotify_uri
 				}]
 			}))
 
@@ -495,7 +489,7 @@ def test_get_geo_poetry_min_sentiment_magnitude(MockGeoTweets, MockMarkovGenerat
 	assert response_json[RESPONSE_KEY_POETRY] == '\n'.join([fake_poetry_line for _ in range(POEM_LINES_TO_GENERATE)])
 	assert response_json[RESPONSE_KEY_TWEETS_READ_COUNT] == 2
 	assert response_json[RESPONSE_KEY_AVG_SENTIMENT] == SENTIMENT_MIN_MAGNITUDE + 0.01
-	assert response_json[RESPONSE_KEY_TRACK] == fake_spotify_url
+	assert response_json[RESPONSE_KEY_TRACK] == fake_spotify_uri
 	assert response_json[RESPONSE_KEY_GENRE] == SPOTIFY_DEFAULT_GENRE
 
 	# Set MIN_TWEETS_TO_READ back to normal
@@ -516,7 +510,7 @@ def test_get_geo_poetry_unknown_genre(MockGeoTweets, MockMarkovGenerator, MockGe
 	geo_poetry_server.MIN_TWEETS_TO_READ = 0
 	fake_tweets_list = iter(['Tweet 1', 'Tweet 2'])
 	fake_poetry_line = 'A Line Of CG Poetry.'
-	fake_spotify_url = 'http://www.example.com'
+	fake_spotify_uri = 'spotify:track:example'
 	fake_genre = 'MyGenre'
 	def check_location_obj(obj):
 		if not isinstance(obj, Location):

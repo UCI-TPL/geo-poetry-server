@@ -169,7 +169,7 @@ def get_geo_poetry():
 		target_energy = target_energy,
 		target_valence = normalized_sentiment)
 	try:
-		spotify_track_url = spotify_response['tracks'][0]['external_urls']['spotify']
+		spotify_track_uri = spotify_response['tracks'][0]['uri']
 	except IndexError:
 		# If the given genre doesn't exist, Spotify returns an empty list of tracks.
 		app.logger.warning('No tracks returned from Spotify. Probably unknown genre: "' + genre + '"')
@@ -180,7 +180,7 @@ def get_geo_poetry():
 	response[RESPONSE_KEY_POETRY] = poetry
 	response[RESPONSE_KEY_TWEETS_READ_COUNT] = len(tweets_list)
 	response[RESPONSE_KEY_AVG_SENTIMENT] = avg_sentiment
-	response[RESPONSE_KEY_TRACK] = spotify_track_url
+	response[RESPONSE_KEY_TRACK] = spotify_track_uri
 	response[RESPONSE_KEY_GENRE] = genre
 	return jsonify(response)
 

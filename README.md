@@ -57,7 +57,7 @@ The server exposes an API with two methods.
 	the following attributes:
 
 	* "poetry" - A string of computer-generated poetry.
-	* "track" - A Spotify URL for the mood music to play. (See the definition of Spotify URL at the Spotify API: [https://developer.spotify.com/web-api/user-guide/#spotify-uris-and-ids](https://developer.spotify.com/web-api/user-guide/#spotify-uris-and-ids))
+	* "track" - A Spotify URI for the mood music to play. (See the definition of Spotify URI at the Spotify API: [https://developer.spotify.com/web-api/user-guide/#spotify-uris-and-ids](https://developer.spotify.com/web-api/user-guide/#spotify-uris-and-ids))
 	* "num_source_tweets" - An integer specifying how many tweets were read. See the algorithm description.
 	* "genre" - The genre that the track was selected from. If the genre argument was given, the value will be identical.
 
