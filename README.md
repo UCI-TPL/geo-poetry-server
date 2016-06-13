@@ -60,6 +60,7 @@ The server exposes an API with two methods.
 	* "track" - A Spotify URI for the mood music to play. (See the definition of Spotify URI at the Spotify API: [https://developer.spotify.com/web-api/user-guide/#spotify-uris-and-ids](https://developer.spotify.com/web-api/user-guide/#spotify-uris-and-ids))
 	* "num_source_tweets" - An integer specifying how many tweets were read. See the algorithm description.
 	* "genre" - The genre that the track was selected from. If the genre argument was given, the value will be identical.
+	* "sentiment" - The valence that was computed and used to select mood music. Ranges from -1 to 1.
 
 3. **/get-genres (GET)** - This method gives clients a list of the available genres for selecting music in.
 	It returns a JSON object with one field:
