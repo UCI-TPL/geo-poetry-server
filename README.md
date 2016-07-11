@@ -70,7 +70,12 @@ The server exposes an API with two methods.
 
 Algorithm Description
 ---------------------
-TODO Describe, in general terms, how poetry is generated and how sentiment analysis and track selection is done.
+
+Each request to generate location-linked poetry requires 5 parameters: latitude, longitude, radius, genre, and energy. First, the Twitter API is queried for tweets that are geotagged within the radius of the specified latitude and longitude. Some simple filtering is applied in an attempt to exclude marketing and promotional tweets. In particular, we exclude retweets, tweets from "verified" accounts, and tweets from accounts with more than 10,000 followers. The tweet text is cleaned of URLs, hashtags, and “@mentions.” The resulting corpus of text is fed into a Markov-chain text generator, which generates a few lines of “poetry” that are, statistically speaking, similar to what people in the area are saying on Twitter – albeit largely nonsensical.
+
+Next, this same corpus of text is fed into VADER-sentiment-analysis. Sentiment analysis yields a parameter called the valence, which ranges from -1 (extremely negative affect) to 1 (extremely positive affect), and can be any number in between. Spotify's music recommendation API requires at least one seed, which can be a genre, track, or artist. We use a seed genre, which may be selected by the user but defaults to “ambient.” In addition to the genre, we specify three parameters for Spotify's API: valence, given by our sentiment analysis; energy, a measure of activity and intensity; and instrumentalness, which we always set to its maximum value – because the design vision is for background music during a road trip, fully instrumental music is preferred. The Spotify API returns a track ID, which the web frontend uses to display a playable Spotify widget alongside the generated lines of poetry. (For the current code of the web frontend, see the [geo-poetry-demo project](https://github.com/UCI-TPL/geo-poetry-demo). The long-term vision is to develop a mobile application that will connect to the same backend.)
+
+Valence and energy together describe the mood that the music track seeks to capture and convey. However, sentiment analysis only yields one dimension of affect, described as valence. Thus, energy is specified by the client, which varies energy between requests according to a simple sine wave. Future versions of the work could vary energy according to some narrative or affective arc, building up and then releasing tension.
 
 Server Development Guide
 ------------------------
