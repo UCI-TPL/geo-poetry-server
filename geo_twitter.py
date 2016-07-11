@@ -63,6 +63,4 @@ class GeoTweets:
 			while True:
 				yield generator.next()
 		except twython.TwythonRateLimitError:
-			# TODO This is useful if we hit the rate limit in the middle of a request, but we should
-			#  notify the client if we are rate-limited before we can gather hardly any tweets.
 			raise StopIteration

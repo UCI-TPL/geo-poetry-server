@@ -158,7 +158,6 @@ def get_geo_poetry():
 	except ZeroDivisionError:
 		avg_sentiment = 0.0
 
-	# TODO Get music recommendations
 	# ===== Music Recommendations =====
 	client_credentials_manager = SpotifyClientCredentials(client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET)
 	spotify = spotipy.Spotify(client_credentials_manager=client_credentials_manager)
@@ -194,5 +193,5 @@ if __name__ == "__main__":
 	SPOTIFY_CLIENT_ID = conf.get('Spotify', 'client_id')
 	SPOTIFY_CLIENT_SECRET = conf.get('Spotify', 'client_secret')
 
-	app.debug = True #TODO Do NOT use debug mode in production
+	app.debug = False # Do NOT use debug mode in production, it is not secure.
 	app.run()
