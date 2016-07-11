@@ -58,7 +58,7 @@ The server exposes an API with two methods.
 
 	* "poetry" - A string of computer-generated poetry.
 	* "track" - A Spotify URI for the mood music to play. (See the definition of Spotify URI at the Spotify API: [https://developer.spotify.com/web-api/user-guide/#spotify-uris-and-ids](https://developer.spotify.com/web-api/user-guide/#spotify-uris-and-ids))
-	* "num_source_tweets" - An integer specifying how many tweets were read. See the algorithm description.
+	* "num_source_tweets" - An integer specifying how many tweets were read. Excludes those tweets that were filtered out as potential marketing or corporate tweets. See the algorithm description.
 	* "genre" - The genre that the track was selected from. If the genre argument was given, the value will be identical.
 	* "sentiment" - The valence that was computed and used to select mood music. Ranges from -1 to 1.
 
@@ -71,12 +71,155 @@ The server exposes an API with two methods.
 Algorithm Description
 ---------------------
 
-Each request to generate location-linked poetry requires 5 parameters: latitude, longitude, radius, genre, and energy. First, the Twitter API is queried for tweets that are geotagged within the radius of the specified latitude and longitude. Some simple filtering is applied in an attempt to exclude marketing and promotional tweets. In particular, we exclude retweets, tweets from "verified" accounts, and tweets from accounts with more than 10,000 followers. The tweet text is cleaned of URLs, hashtags, and “@mentions.” The resulting corpus of text is fed into a Markov-chain text generator, which generates a few lines of “poetry” that are, statistically speaking, similar to what people in the area are saying on Twitter – albeit largely nonsensical.
+Each request to generate location-linked poetry requires 5 parameters: `latitude`, `longitude`, `radius`, `genre`, and `energy`. First, the Twitter API is queried for tweets that are geotagged within the radius of the specified latitude and longitude. Some simple filtering is applied in an attempt to exclude marketing and promotional tweets. In particular, we exclude retweets, tweets from "verified" accounts, and tweets from accounts with more than 10,000 followers. The tweet text is cleaned of URLs, hashtags, and “@mentions.” The resulting corpus of text is fed into a Markov-chain text generator, which generates a few lines of “poetry” that are, statistically speaking, similar to what people in the area are saying on Twitter – albeit largely nonsensical.
 
-Next, this same corpus of text is fed into VADER-sentiment-analysis. Sentiment analysis yields a parameter called the valence, which ranges from -1 (extremely negative affect) to 1 (extremely positive affect), and can be any number in between. Spotify's music recommendation API requires at least one seed, which can be a genre, track, or artist. We use a seed genre, which may be selected by the user but defaults to “ambient.” In addition to the genre, we specify three parameters for Spotify's API: valence, given by our sentiment analysis; energy, a measure of activity and intensity; and instrumentalness, which we always set to its maximum value – because the design vision is for background music during a road trip, fully instrumental music is preferred. The Spotify API returns a track ID, which the web frontend uses to display a playable Spotify widget alongside the generated lines of poetry. (For the current code of the web frontend, see the [geo-poetry-demo project](https://github.com/UCI-TPL/geo-poetry-demo). The long-term vision is to develop a mobile application that will connect to the same backend.)
+Next, this same corpus of text is given to the `VADER-sentiment-analysis` library. Sentiment analysis yields a parameter called the valence, which ranges from `-1` (extremely negative affect) to `1` (extremely positive affect), and can be any number in between. Spotify's music recommendation API requires at least one seed, which can be a genre, track, or artist. We use a seed genre, which may be selected by the user but defaults to “ambient.” In addition to the genre, we specify three parameters for Spotify's API: `valence`, given by our sentiment analysis; `energy`, a measure of activity and intensity; and `instrumentalness`, which we always set to its maximum value – because the design vision is for background music during a road trip, fully instrumental music is preferred. The Spotify API returns a track ID, which the web frontend uses to display a playable Spotify widget alongside the generated lines of poetry. (For the current code of the web frontend, see the [geo-poetry-demo project](https://github.com/UCI-TPL/geo-poetry-demo). The long-term vision is to develop a mobile application that will connect to the same backend.)
 
-Valence and energy together describe the mood that the music track seeks to capture and convey. However, sentiment analysis only yields one dimension of affect, described as valence. Thus, energy is specified by the client, which varies energy between requests according to a simple sine wave. Future versions of the work could vary energy according to some narrative or affective arc, building up and then releasing tension.
+`Valence` and `energy` together describe the mood that the music track seeks to capture and convey. However, sentiment analysis only yields one dimension of affect, which is converted into the `valence` parameter. Thus, `energy` is specified by the client, which varies energy between requests according to a simple sine wave. Future versions of the work could vary energy according to some narrative or affective arc, building up and then releasing tension.
+
+**TODO Describe neutral valence problem and how we attempt to tackle it.**
 
 Server Development Guide
 ------------------------
-TODO Guidelines for further development/extension, including how to run unit tests, installation/setup, configuration files, configuration constants in Python modules, etc.
+
+### Running the Server
+
+TODO Describe configuration file with API keys.
+
+1. Make sure all the system requirements are fulfilled.
+2. Clone the repository somewhere on your server.
+3. Run `geo_poetry_server.py`. If you have Python 3 installed on your system as well, make sure you run the script with Python 2.7.
+4. The server is now listening on port 5000. If you need a different port number, check the Flask documentation and make appropriate code changes.
+
+### Running Unit Tests
+
+Unit tests are, unfortunately, separated into two directories. First, there are the main unit tests, located under the `/test` directory at the root of the repository. They can be run directly as Python scripts, but you will need the `fudge` and `pytest` packages installed. The script `/test/test_template.py` is not a unit test. Rather, it is a template for the creation of future unit tests.
+
+Second, the `markov_text` package has its own unit tests, which have been modified to work with the changes made to the package. They are located at `/markov_text/test`. They use Python's built-in `unittest` package, and so do not require any additional packages to run.
+
+### Configuration Constants
+
+Various implementation details are stored as Python variables and are easy to change. They will be located at the beginning of the relevant Python file and will be named in all caps. They are all described in the table below. Most are located in the main server script, `geo_poetry_server.py`.
+
+<table>
+	<thead>
+		<th>File</th>
+		<th>Constant Name</th>
+		<th>Value</th>
+		<th>Description</th>
+	</thead>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>VERSION</td>
+		<td>"0.0"</td>
+		<td>The server version.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>CONF_FILE_PATH</td>
+		<td>"scratch/server.conf"</td>
+		<td>The path to look for a `.conf` file containing API keys.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>RESPONSE_KEY_POETRY</td>
+		<td>"poetry"</td>
+		<td>The JSON attribute under which the poetry text is stored in the response.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>RESPONSE_KEY_TWEETS_READ_COUNT</td>
+		<td>"num_source_tweets"</td>
+		<td>The JSON attribute under which the number of tweets read is stored in the response.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>RESPONSE_KEY_AVG_SENTIMENT</td>
+		<td>"sentiment"</td>
+		<td>The JSON attribute under which the average tweet sentiment is stored in the response.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>RESPONSE_KEY_TRACK</td>
+		<td>"track"</td>
+		<td>The JSON attribute under which the Spotify ID of the recommended track is stored in the response.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>RESPONSE_KEY_GENRE</td>
+		<td>"genre"</td>
+		<td>The JSON attribute under which the Spotify seed genre is stored in the response.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>MAX_TWEETS_TO_READ</td>
+		<td>500</td>
+		<td>The algorithm will read at least MIN_TWEETS_TO_READ and at most MAX_TWEETS_TO_READ tweets, excluding those filtered out. If it hits Twitter's API rate limit before reading MIN_TWEETS_TO_READ tweets, it will return HTTP 429: Too Many Requests.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>MIN_TWEETS_TO_READ</td>
+		<td>100</td>
+		<td>The algorithm will read at least MIN_TWEETS_TO_READ and at most MAX_TWEETS_TO_READ tweets, excluding those filtered out. If it hits Twitter's API rate limit before reading MIN_TWEETS_TO_READ tweets, it will return HTTP 429: Too Many Requests.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>MARKOV_DEPTH</td>
+		<td>2</td>
+		<td>The size of the n-grams to examine for Markov-chain text generation. With this scale of a corpus, we have found 2 to be a good number - it is the minimum for the generator to work, but setting the depth to 3 tends to regurgitate tweets verbatim, with no scrambling.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>POEM_LINES_TO_GENERATE</td>
+		<td>3</td>
+		<td>The number of lines of poetry to generate.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>DEFAULT_RADIUS</td>
+		<td>10</td>
+		<td>The radius defaults to 10km if not specified by the client.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>DEFAULT_IMPERIAL_UNITS</td>
+		<td>False</td>
+		<td>The radius defaults to 10km if not specified by the client.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>SENTIMENT_MIN_MAGNITUDE</td>
+		<td>0.2</td>
+		<td>In an attempt to avoid relatively neutral results, tweets with a sentiment within this number of zero will be excluded from the average sentiment calculation. See the algorithm description.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>SPOTIFY_DEFAULT_GENRE</td>
+		<td>"ambient"</td>
+		<td>The seed genre will default to this value if not specified by the client.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>SPOTIFY_DEFAULT_ENERGY</td>
+		<td>0.5</td>
+		<td>The song energy will default to this value if not specified by the client.</td>
+	</tr>
+	<tr>
+		<td>/geo_twitter.py</td>
+		<td>URL_REGEX</td>
+		<td>`r'(https?://\S*)'`</td>
+		<td>The regular expression used to match URLs in order to clean them from tweets.</td>
+	</tr>
+	<tr>
+		<td>/geo_twitter.py</td>
+		<td>MIN_NUM_FOLLOWERS</td>
+		<td>0</td>
+		<td>Tweets from accounts with less than this many followers will be filtered out.</td>
+	</tr>
+	<tr>
+		<td>/geo_twitter.py</td>
+		<td>MAX_NUM_FOLLOWERS</td>
+		<td>10000</td>
+		<td>Tweets from accounts with more than this many followers will be filtered out.</td>
+	</tr>
+</table>
