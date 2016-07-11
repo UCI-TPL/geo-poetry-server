@@ -126,7 +126,7 @@ Various implementation details are stored as Python variables and are easy to ch
 	<tr>
 		<td>/geo_poetry_server.py</td>
 		<td>VERSION</td>
-		<td>"0.0"</td>
+		<td>"0.1"</td>
 		<td>The server version.</td>
 	</tr>
 	<tr>

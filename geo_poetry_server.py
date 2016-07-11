@@ -13,7 +13,7 @@ import vaderSentiment.vaderSentiment
 import spotipy
 import spotipy.oauth2
 
-VERSION = "0.0"
+VERSION = "0.1"
 
 # The actual credentials are read from a config file during startup,
 # but we need unique values here for testing purposes. See test/test_geo_poetry_server.py
