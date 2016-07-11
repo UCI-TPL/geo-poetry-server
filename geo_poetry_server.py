@@ -21,7 +21,7 @@ TWITTER_CONSUMER_KEY = "TwitterConsumerKey"
 TWITTER_CONSUMER_SECRET = "TwitterConsumerSecret"
 SPOTIFY_CLIENT_ID = "SpotifyClientID"
 SPOTIFY_CLIENT_SECRET = "SpotifyClientSecret"
-CONF_FILE_PATH = "scratch/server.conf" # TODO Change location in production.
+CONF_FILE_PATH = "conf/server.conf"
 
 RESPONSE_KEY_POETRY = 'poetry'
 RESPONSE_KEY_TWEETS_READ_COUNT = 'num_source_tweets'

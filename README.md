@@ -75,25 +75,40 @@ Each request to generate location-linked poetry requires 5 parameters: `latitude
 
 Next, this same corpus of text is given to the `VADER-sentiment-analysis` library. Sentiment analysis yields a parameter called the valence, which ranges from `-1` (extremely negative affect) to `1` (extremely positive affect), and can be any number in between. Spotify's music recommendation API requires at least one seed, which can be a genre, track, or artist. We use a seed genre, which may be selected by the user but defaults to “ambient.” In addition to the genre, we specify three parameters for Spotify's API: `valence`, given by our sentiment analysis; `energy`, a measure of activity and intensity; and `instrumentalness`, which we always set to its maximum value – because the design vision is for background music during a road trip, fully instrumental music is preferred. The Spotify API returns a track ID, which the web frontend uses to display a playable Spotify widget alongside the generated lines of poetry. (For the current code of the web frontend, see the [geo-poetry-demo project](https://github.com/UCI-TPL/geo-poetry-demo). The long-term vision is to develop a mobile application that will connect to the same backend.)
 
-`Valence` and `energy` together describe the mood that the music track seeks to capture and convey. However, sentiment analysis only yields one dimension of affect, which is converted into the `valence` parameter. Thus, `energy` is specified by the client, which varies energy between requests according to a simple sine wave. Future versions of the work could vary energy according to some narrative or affective arc, building up and then releasing tension.
+Sentiment analysis is applied to each tweet individually, and the resulting valence measure is averaged across all tweets read. At such a large scale, the valence falls prey to the law of averages – average valence tends towards neutral (zero). In an attempt to mitigate this problem, we exclude relatively neutral tweets from the average. We considered tweets to be “relatively neutral” if their valence fell within a certain interval centered around zero – in particular, plus or minus 0.2 (see the Configuration Constants section below on how to change this interval).
 
-**TODO Describe neutral valence problem and how we attempt to tackle it.**
+`Valence` and `energy` together describe the mood that the music track seeks to capture and convey. However, sentiment analysis only yields one dimension of affect, which is converted into the `valence` parameter. Thus, `energy` is specified by the client, which varies energy between requests according to a simple sine wave. Future versions of the work could vary energy according to some narrative or affective arc, building up and then releasing tension.
 
 Server Development Guide
 ------------------------
 
-### Running the Server
+### Configuration File
 
-TODO Describe configuration file with API keys.
+For security purposes, API keys and secrets are not stored anywhere in the Git repository. Instead, they are stored in a configuration file that is excluded from Git. The file is in the standard `.conf` file format. It should be located at `/conf/server.conf`. Here is an example file:
+
+	[Twitter]
+	consumer_key=XXXXXXXXXXXX
+	consumer_secret=XXXXXXXXXX
+	access_token_key=XXXXX-XXXXXXXXXXXXXXX
+	access_token_secret=XXXXXXXXXXXXXXX
+	
+	[Spotify]
+	client_id=XXXXXXXXXXXXXXXXXXXXXXXX
+	client_secret=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+You will need to register the application with Twitter and with Spotify. Follow their documentation on how to obtain the API keys and secrets. For the Spotify API, it is recommended to create a new Spotify account for use only with this application, as the user's individual music history seems to bias Spotify's recommendation API. A new account that has never played any songs will, in theory, avoid this bias.
+
+### Running the Server
 
 1. Make sure all the system requirements are fulfilled.
 2. Clone the repository somewhere on your server.
-3. Run `geo_poetry_server.py`. If you have Python 3 installed on your system as well, make sure you run the script with Python 2.7.
-4. The server is now listening on port 5000. If you need a different port number, check the Flask documentation and make appropriate code changes.
+3. Create and fill in the configuration file as described above.
+4. Run `geo_poetry_server.py`. If you have Python 3 installed on your system as well, make sure you run the script with Python 2.7.
+5. The server is now listening on port 5000. If you need a different port number, check the Flask documentation and make appropriate code changes.
 
 ### Running Unit Tests
 
-Unit tests are, unfortunately, separated into two directories. First, there are the main unit tests, located under the `/test` directory at the root of the repository. They can be run directly as Python scripts, but you will need the `fudge` and `pytest` packages installed. The script `/test/test_template.py` is not a unit test. Rather, it is a template for the creation of future unit tests.
+Unit tests are separated into two directories. First, there are the main unit tests, located under the `/test` directory at the root of the repository. These are the only ones that will be relevant for most development purposes. They can be run directly as Python scripts, but you will need the `fudge` and `pytest` packages installed. The script `/test/test_template.py` is not a unit test. Rather, it is a template for the creation of future unit tests.
 
 Second, the `markov_text` package has its own unit tests, which have been modified to work with the changes made to the package. They are located at `/markov_text/test`. They use Python's built-in `unittest` package, and so do not require any additional packages to run.
 
@@ -117,7 +132,7 @@ Various implementation details are stored as Python variables and are easy to ch
 	<tr>
 		<td>/geo_poetry_server.py</td>
 		<td>CONF_FILE_PATH</td>
-		<td>"scratch/server.conf"</td>
+		<td>"conf/server.conf"</td>
 		<td>The path to look for a `.conf` file containing API keys.</td>
 	</tr>
 	<tr>
@@ -207,7 +222,7 @@ Various implementation details are stored as Python variables and are easy to ch
 	<tr>
 		<td>/geo_twitter.py</td>
 		<td>URL_REGEX</td>
-		<td>`r'(https?://\S*)'`</td>
+		<td>` r'(https?://\S*)' `</td>
 		<td>The regular expression used to match URLs in order to clean them from tweets.</td>
 	</tr>
 	<tr>
