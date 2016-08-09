@@ -40,6 +40,9 @@ SENTIMENT_MIN_MAGNITUDE = 0.2
 SPOTIFY_DEFAULT_GENRE = 'ambient'
 SPOTIFY_DEFAULT_ENERGY = 0.5
 
+RESPONSE_LOG_TEMPLATE = "%Y-%m-%d_%h-%M-%S.%f_response"
+TWEET_LOG_DIRECTORY = "logs/"
+
 
 app = Flask(__name__)
 CORS(app)
@@ -135,7 +138,8 @@ def get_geo_poetry():
 	def tweet_limitor(generator):
 		for i in range(MAX_TWEETS_TO_READ):
 			yield generator.next()
-	tweets_list = [tweet for tweet in tweet_limitor(tweets.Tweets(location))]
+		print "Tweet Limitor Hit Maximum."
+	tweets_list = [tweet for tweet in tweet_limitor(tweets.Tweets(location, True))]
 	if len(tweets_list) < MIN_TWEETS_TO_READ:
 		# If we hit Twitter's rate limit, tweets.Tweets(location) will raise StopIteration early
 		abort(429)
@@ -193,5 +197,5 @@ if __name__ == "__main__":
 	SPOTIFY_CLIENT_ID = conf.get('Spotify', 'client_id')
 	SPOTIFY_CLIENT_SECRET = conf.get('Spotify', 'client_secret')
 
-	app.debug = False # Do NOT use debug mode in production, it is not secure.
+	app.debug = True # Do NOT use debug mode in production, it is not secure.
 	app.run()

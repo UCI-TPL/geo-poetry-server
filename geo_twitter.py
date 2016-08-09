@@ -9,6 +9,23 @@ URL_REGEX = r'(https?://\S*)' # Eh, good enough for my purposes
 MIN_NUM_FOLLOWERS = 0
 MAX_NUM_FOLLOWERS = 10000
 
+import os.path
+import codecs
+import datetime
+TWEET_LOG_TEMPLATE = "%Y-%m-%d_%H-%M-%S.%f"
+TWEET_LOG_EXT_UNFILTERED = "_unfiltered"
+TWEET_LOG_EXT_FILTERED = "_filtered"
+TWEET_LOG_EXT_CLEANED = "_cleaned"
+TWEET_LOG_DIRECTORY = "logs/"
+
+def asciify(string):
+	"""Generator that removes non-ASCII characters and newlines from a string."""
+	for ch in string:
+		if (ord(ch) <= 127) and (ch != '\n'):
+			yield ch
+		else:
+			continue
+
 class GeoTweets:
 	"""Fetches recent tweets from the area surrounding a particular GPS location.
 	Methods may throw TwythonAuthError."""
@@ -21,10 +38,14 @@ class GeoTweets:
 		Filters out tweets from (1) verified accounts, and
 			(2) Accounts with less than MIN_NUM_FOLLOWERS or greater than MAX_NUM_FOLLOWERS followers."""
 		for tweet in list:
+			if self.tweet_log_unfiltered:
+				self.tweet_log_unfiltered.write(u"[{}] {}\n".format(tweet['user']['name'], tweet['text']))
 			if tweet['user']['verified']:
 				continue
 			elif tweet['user']['followers_count'] < MIN_NUM_FOLLOWERS or tweet['user']['followers_count'] > MAX_NUM_FOLLOWERS:
 				continue
+			if self.tweet_log_filtered:
+				self.tweet_log_filtered.write(u"[{}] {}\n".format(tweet['user']['name'], tweet['text']))
 			yield tweet
 
 	def ExtractText(self, list):
@@ -40,6 +61,8 @@ class GeoTweets:
 			tweet_clean = re.sub(r'#\w+', '', tweet_clean) # Remove hashtags
 			tweet_clean = tweet_clean.strip() # Trim whitespace
 			if len(tweet_clean) > 0:
+				if self.tweet_log_cleaned:
+					self.tweet_log_cleaned.write(u"{}\n".format(tweet_clean))
 				yield tweet_clean
 			else: # Skip tweets that are now empty
 				continue
@@ -53,14 +76,27 @@ class GeoTweets:
 			location_str += 'km'
 		return self.api.cursor(self.api.search, q='-RT', result_type='recent', lang='en', geocode=location_str)
 
-	def Tweets(self, location):
+	def Tweets(self, location, log_tweets = False):
 		"""Generator that queries the Twitter API to fetch nearby tweets, and filters and cleans them.
 
 		Simply chains all the generator methods: L{FetchTweets} -> L{FilterTweets} -> L{ExtractText} -> L{CleanTweets}
 		Because this is all it does, I didn't bother including it in the unit tests."""
+		if log_tweets:
+			tweet_log_base = datetime.datetime.now().strftime(TWEET_LOG_TEMPLATE)
+			self.tweet_log_unfiltered = codecs.open(os.path.join(TWEET_LOG_DIRECTORY, tweet_log_base+TWEET_LOG_EXT_UNFILTERED), 'w', 'utf-8')
+			self.tweet_log_filtered = codecs.open(os.path.join(TWEET_LOG_DIRECTORY, tweet_log_base+TWEET_LOG_EXT_FILTERED), 'w', 'utf-8')
+			self.tweet_log_cleaned = codecs.open(os.path.join(TWEET_LOG_DIRECTORY, tweet_log_base+TWEET_LOG_EXT_CLEANED), 'w', 'utf-8')
 		generator = self.CleanTweets(self.ExtractText(self.FilterTweets(self.FetchTweets(location))))
 		try:
 			while True:
 				yield generator.next()
 		except twython.TwythonRateLimitError:
 			raise StopIteration
+		finally:
+			if log_tweets:
+				self.tweet_log_unfiltered.close()
+				self.tweet_log_unfiltered = None
+				self.tweet_log_filtered.close()
+				self.tweet_log_filtered = None
+				self.tweet_log_cleaned.close()
+				self.tweet_log_cleaned = None
