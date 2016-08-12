@@ -22,7 +22,7 @@ client = app.test_client()
 
 def test_ping():
 	"""
-	The ping method returns the JSON {'up': true, 'version': "0.0"}.
+	The ping method returns the JSON {'up': true, 'version': geo_poetry_server.VERSION}.
 
 	Functions tested:
 		- L{geo_poetry_server.ping}
@@ -31,7 +31,7 @@ def test_ping():
 	response_json = json.loads(response.get_data())
 	assert response.status_code == 200
 	assert response_json['up'] == True
-	assert response_json['version'] == "0.0"
+	assert response_json['version'] == geo_poetry_server.VERSION
 
 @fudge.patch('geo_twitter.GeoTweets')
 def test_get_geo_poetry_auth_failure(MockGeoTweets):
@@ -253,10 +253,12 @@ def test_get_geo_poetry(MockGeoTweets, MockMarkovGenerator, MockGetSentiment, Mo
 		if not obj.imperial_units == True:
 			return False
 		return True
+	def check_is_boolean(obj):
+		return isinstance(obj, bool)
 	(MockGeoTweets.expects_call()
 		.with_args(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
 		.returns_fake()
-		.expects('Tweets').with_args(arg.passes_test(check_location_obj))
+		.expects('Tweets').with_args(arg.passes_test(check_location_obj), arg.passes_test(check_is_boolean))
 		.returns(fake_tweets_list))
 	(MockMarkovGenerator.expects_call()
 		.with_args(['Tweet 1', 'Tweet 2'], MARKOV_DEPTH, ':memory:')
@@ -327,10 +329,12 @@ def test_get_geo_poetry_rate_limit(MockGeoTweets, MockMarkovGenerator):
 		if not obj.imperial_units == True:
 			return False
 		return True
+	def check_is_boolean(obj):
+		return isinstance(obj, bool)
 	(MockGeoTweets.expects_call()
 		.with_args(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
 		.returns_fake()
-		.expects('Tweets').with_args(arg.passes_test(check_location_obj))
+		.expects('Tweets').with_args(arg.passes_test(check_location_obj), arg.passes_test(check_is_boolean))
 		.returns(fake_tweets_list))
 
 	response = client.post("/geo-poetry", data=json.dumps({
@@ -374,10 +378,12 @@ def test_get_geo_poetry_tweet_limiting(MockGeoTweets, MockMarkovGenerator, MockG
 		if not obj.imperial_units == True:
 			return False
 		return True
+	def check_is_boolean(obj):
+		return isinstance(obj, bool)
 	(MockGeoTweets.expects_call()
 		.with_args(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
 		.returns_fake()
-		.expects('Tweets').with_args(arg.passes_test(check_location_obj))
+		.expects('Tweets').with_args(arg.passes_test(check_location_obj), arg.passes_test(check_is_boolean))
 		.returns(fake_tweets_list))
 	(MockMarkovGenerator.expects_call()
 		.with_args(['Tweet 1'], MARKOV_DEPTH, ':memory:')
@@ -448,10 +454,12 @@ def test_get_geo_poetry_min_sentiment_magnitude(MockGeoTweets, MockMarkovGenerat
 		if not obj.imperial_units == True:
 			return False
 		return True
+	def check_is_boolean(obj):
+		return isinstance(obj, bool)
 	(MockGeoTweets.expects_call()
 		.with_args(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
 		.returns_fake()
-		.expects('Tweets').with_args(arg.passes_test(check_location_obj))
+		.expects('Tweets').with_args(arg.passes_test(check_location_obj), arg.passes_test(check_is_boolean))
 		.returns(fake_tweets_list))
 	(MockMarkovGenerator.expects_call()
 		.with_args(['Tweet 1', 'Tweet 2'], MARKOV_DEPTH, ':memory:')
@@ -524,10 +532,12 @@ def test_get_geo_poetry_unknown_genre(MockGeoTweets, MockMarkovGenerator, MockGe
 		if not obj.imperial_units == True:
 			return False
 		return True
+	def check_is_boolean(obj):
+		return isinstance(obj, bool)
 	(MockGeoTweets.expects_call()
 		.with_args(TWITTER_CONSUMER_KEY, TWITTER_CONSUMER_SECRET)
 		.returns_fake()
-		.expects('Tweets').with_args(arg.passes_test(check_location_obj))
+		.expects('Tweets').with_args(arg.passes_test(check_location_obj), arg.passes_test(check_is_boolean))
 		.returns(fake_tweets_list))
 	(MockMarkovGenerator.expects_call()
 		.with_args(['Tweet 1', 'Tweet 2'], MARKOV_DEPTH, ':memory:')

@@ -42,19 +42,48 @@ def test_GeoTweets_FetchTweets_imperial(MockTwython):
 		- L{geo_twitter.GeoTweets.__init__}
 		- L{geo_twitter.GeoTweets.FetchTweets}
 	"""
+	tweets_page1 = {
+		'statuses' : [
+			{
+				'id' : 'status1'
+			},
+			{
+				'id' : 'status2'
+			}
+		]
+	}
+	tweets_page2 = {
+		'statuses' : [
+			{
+				'id' : 'status2'
+			},
+			{
+				'id' : 'status3'
+			}
+		]
+	}
 	(MockTwython.expects_call()
 				# __init__
 				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 				.returns_fake()
 
 				# FetchTweets
-				.has_attr(search=None)
-				.expects('cursor').with_args(None, q='-RT', result_type='recent', lang='en', 
+				.expects('search').with_args(q='-RT', result_type='recent', lang='en',
 									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'mi')
-				.returns('CONSTANT'))
+				.returns(tweets_page1)
+				.expects('search').with_args(q='-RT', result_type='recent', lang='en', max_id='status2',
+									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'mi')
+				.returns(tweets_page2)
+				.expects('search').with_args(q='-RT', result_type='recent', lang='en', max_id='status3',
+									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'mi')
+				.returns(None)) #Returning None will cause the generator to stop
 	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
-	fake_location = Location(FAKE_LOCATION_LAT, FAKE_LOCATION_LONG, FAKE_LOCATION_RADIUS)
-	assert geo_tweets.FetchTweets(fake_location) == 'CONSTANT'
+	fake_location = Location(FAKE_LOCATION_LAT, FAKE_LOCATION_LONG, FAKE_LOCATION_RADIUS, True)
+	tweets = [tweet for tweet in geo_tweets.FetchTweets(fake_location)]
+	assert len(tweets) == 3
+	assert tweets[0]['id'] == 'status1'
+	assert tweets[1]['id'] == 'status2'
+	assert tweets[2]['id'] == 'status3'
 
 @fudge.patch('twython.Twython')
 def test_GeoTweets_FetchTweets_metric(MockTwython):
@@ -65,19 +94,48 @@ def test_GeoTweets_FetchTweets_metric(MockTwython):
 		- L{geo_twitter.GeoTweets.__init__}
 		- L{geo_twitter.GeoTweets.FetchTweets}
 	"""
+	tweets_page1 = {
+		'statuses' : [
+			{
+				'id' : 'status1'
+			},
+			{
+				'id' : 'status2'
+			}
+		]
+	}
+	tweets_page2 = {
+		'statuses' : [
+			{
+				'id' : 'status2'
+			},
+			{
+				'id' : 'status3'
+			}
+		]
+	}
 	(MockTwython.expects_call()
 				# __init__
 				.with_args(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 				.returns_fake()
 
 				# FetchTweets
-				.has_attr(search=None)
-				.expects('cursor').with_args(None, q='-RT', result_type='recent', lang='en', 
+				.expects('search').with_args(q='-RT', result_type='recent', lang='en',
 									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'km')
-				.returns('CONSTANT'))
+				.returns(tweets_page1)
+				.expects('search').with_args(q='-RT', result_type='recent', lang='en', max_id='status2',
+									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'km')
+				.returns(tweets_page2)
+				.expects('search').with_args(q='-RT', result_type='recent', lang='en', max_id='status3',
+									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'km')
+				.returns(None)) #Returning None will cause the generator to stop
 	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
 	fake_location = Location(FAKE_LOCATION_LAT, FAKE_LOCATION_LONG, FAKE_LOCATION_RADIUS, False)
-	assert geo_tweets.FetchTweets(fake_location) == 'CONSTANT'
+	tweets = [tweet for tweet in geo_tweets.FetchTweets(fake_location)]
+	assert len(tweets) == 3
+	assert tweets[0]['id'] == 'status1'
+	assert tweets[1]['id'] == 'status2'
+	assert tweets[2]['id'] == 'status3'
 
 @fudge.patch('twython.Twython')
 def test_GeoTweets_CleanTweets(MockTwython):

@@ -32,6 +32,9 @@ class GeoTweets:
 
 	def __init__(self, consumer_key, consumer_secret):
 		self.api = twython.Twython(consumer_key, consumer_secret)
+		self.tweet_log_unfiltered = None
+		self.tweet_log_filtered = None
+		self.tweet_log_cleaned = None
 
 	def FilterTweets(self, list):
 		"""Generator that attempts to eliminate commercial tweets.
