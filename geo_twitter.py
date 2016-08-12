@@ -74,7 +74,23 @@ class GeoTweets:
 			location_str += 'mi'
 		else:
 			location_str += 'km'
-		return self.api.cursor(self.api.search, q='-RT', result_type='recent', lang='en', geocode=location_str)
+		max_id = None
+		while True:
+			if max_id:
+				response = self.api.search(q='-RT', result_type='recent', lang='en', geocode=location_str, max_id=max_id)
+				if not response:
+					raise StopIteration
+				# max_id is inclusive, so the last tweet from the previous page will be repeated, so we skip it
+				for status in response['statuses'][1:]:
+					yield status
+				max_id = response['statuses'][-1]['id']
+			else: # first iteration
+				response = self.api.search(q='-RT', result_type='recent', lang='en', geocode=location_str)
+				if not response:
+					raise StopIteration
+				for status in response['statuses']:
+					yield status
+				max_id = response['statuses'][-1]['id']
 
 	def Tweets(self, location, log_tweets = False):
 		"""Generator that queries the Twitter API to fetch nearby tweets, and filters and cleans them.
