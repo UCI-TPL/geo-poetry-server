@@ -112,6 +112,12 @@ Unit tests are separated into two directories. First, there are the main unit te
 
 Second, the `markov_text` package has its own unit tests, which have been modified to work with the changes made to the package. They are located at `/markov_text/test`. They use Python's built-in `unittest` package, and so do not require any additional packages to run.
 
+### Logging
+
+The `LOG_TWEETS` configuration constant (see below) enables logging, allowing you to see all the tweets consumed by Geo-Poetry, as well as how they are filtered and cleaned. When it is set to `True`, each call to `/geo-poetry` will generate three log files. The files will be located in the `logs` directory under the server root, and will be named with the request timestamp followed by either "unfiltered", "filtered", or "cleaned". The "unfiltered" file contains all the tweets that the server read. The "filtered" file contains the filtered tweets - those that were not eliminated in an attempt to avoid marketing tweets. The "cleaned" file contains the filtered tweets with hashtags, @mentions, and URLs removed - the text as it will be fed into the Markov generator. In the former two files, each tweet is preceeded by the name of the account that posted it, wrapped in square brackets. In the "cleaned" file, only the text of the tweet is present.
+
+If the `logs` directory does not exist, then errors will be generated when logging is enabled. All the tweet logs are encoded in UTF-8.
+
 ### Configuration Constants
 
 Various implementation details are stored as Python variables and are easy to change. They will be located at the beginning of the relevant Python file and will be named in all caps. They are all described in the table below. Most are located in the main server script, `geo_poetry_server.py`.
@@ -218,6 +224,12 @@ Various implementation details are stored as Python variables and are easy to ch
 		<td>SPOTIFY_DEFAULT_ENERGY</td>
 		<td>0.5</td>
 		<td>The song energy will default to this value if not specified by the client.</td>
+	</tr>
+	<tr>
+		<td>/geo_poetry_server.py</td>
+		<td>LOG_TWEETS</td>
+		<td>False</td>
+		<td>Whether to log all tweets read as described in the "Logging" section above.</td>
 	</tr>
 	<tr>
 		<td>/geo_twitter.py</td>
