@@ -13,7 +13,7 @@ import vaderSentiment.vaderSentiment
 import spotipy
 import spotipy.oauth2
 
-VERSION = "0.1"
+VERSION = "0.2"
 
 # The actual credentials are read from a config file during startup,
 # but we need unique values here for testing purposes. See test/test_geo_poetry_server.py
@@ -139,7 +139,7 @@ def get_geo_poetry():
 		for i in range(MAX_TWEETS_TO_READ):
 			yield generator.next()
 		print "Tweet Limitor Hit Maximum."
-	tweets_list = [tweet for tweet in tweet_limitor(tweets.Tweets(location, True))]
+	tweets_list = [tweet for tweet in tweet_limitor(tweets.Tweets(location, False))]
 	if len(tweets_list) < MIN_TWEETS_TO_READ:
 		# If we hit Twitter's rate limit, tweets.Tweets(location) will raise StopIteration early
 		abort(429)
@@ -197,5 +197,5 @@ if __name__ == "__main__":
 	SPOTIFY_CLIENT_ID = conf.get('Spotify', 'client_id')
 	SPOTIFY_CLIENT_SECRET = conf.get('Spotify', 'client_secret')
 
-	app.debug = True # Do NOT use debug mode in production, it is not secure.
+	app.debug = False # Do NOT use debug mode in production, it is not secure.
 	app.run()
