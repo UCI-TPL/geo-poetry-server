@@ -80,7 +80,7 @@ class GeoTweets:
 		max_id = None
 		while True:
 			if max_id:
-				response = self.api.search(q='-RT', result_type='recent', lang='en', geocode=location_str, max_id=max_id)
+				response = self.api.search(q='-RT', result_type='recent', geocode=location_str, max_id=max_id)
 				if not response:
 					raise StopIteration
 				# max_id is inclusive, so the last tweet from the previous page will be repeated, so we skip it
@@ -88,7 +88,7 @@ class GeoTweets:
 					yield status
 				max_id = response['statuses'][-1]['id']
 			else: # first iteration
-				response = self.api.search(q='-RT', result_type='recent', lang='en', geocode=location_str)
+				response = self.api.search(q='-RT', result_type='recent', geocode=location_str)
 				if not response:
 					raise StopIteration
 				for status in response['statuses']:
