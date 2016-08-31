@@ -4,7 +4,7 @@ import sys
 import logging
 # append current dir to module path
 cwd = os.getcwd()
-install_root = os.path.join(cwd, 'geo_poetry_server')
+install_root = os.path.join(cwd, 'geo-poetry-server')
 sys.path.append(install_root)
 # assuming this module is in the same dir as passenger_wsgi, this now works!
 from geo_poetry_server import app
