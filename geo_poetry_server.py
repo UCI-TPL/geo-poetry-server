@@ -1,3 +1,4 @@
+#!/usr/bin/python
 """
 The main server program. Spins up a Flask instance with the necessary methods.
 
@@ -185,15 +186,16 @@ def get_geo_poetry():
 	response[RESPONSE_KEY_GENRE] = genre
 	return jsonify(response)
 
+# ===== INITIALIZATION =====
+# Read config file
+conf = SafeConfigParser()
+conf.read(CONF_FILE_PATH)
+TWITTER_CONSUMER_KEY = conf.get('Twitter', 'consumer_key')
+TWITTER_CONSUMER_SECRET = conf.get('Twitter', 'consumer_secret')
+SPOTIFY_CLIENT_ID = conf.get('Spotify', 'client_id')
+SPOTIFY_CLIENT_SECRET = conf.get('Spotify', 'client_secret')
+
+app.debug = False # Do NOT use debug mode in production, it is not secure.
 
 if __name__ == "__main__":
-	# Read config file
-	conf = SafeConfigParser()
-	conf.read(CONF_FILE_PATH)
-	TWITTER_CONSUMER_KEY = conf.get('Twitter', 'consumer_key')
-	TWITTER_CONSUMER_SECRET = conf.get('Twitter', 'consumer_secret')
-	SPOTIFY_CLIENT_ID = conf.get('Spotify', 'client_id')
-	SPOTIFY_CLIENT_SECRET = conf.get('Spotify', 'client_secret')
-
-	app.debug = False # Do NOT use debug mode in production, it is not secure.
 	app.run()
