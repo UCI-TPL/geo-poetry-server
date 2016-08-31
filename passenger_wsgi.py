@@ -4,12 +4,13 @@ import sys
 import logging
 # append current dir to module path
 cwd = os.getcwd()
-sys.path.append(cwd)
+install_root = os.path.join(cwd, 'geo_poetry_server')
+sys.path.append(install_root)
 # assuming this module is in the same dir as passenger_wsgi, this now works!
 from geo_poetry_server import app
 
 # create a logfile in the current directory
-logfilename = os.path.join(cwd, 'logs', 'passenger_wsgi.log')
+logfilename = os.path.join(install_root, 'logs', 'passenger_wsgi.log')
 # configure the logging
 logging.basicConfig(filename=logfilename, level=logging.INFO)
 logging.info("Running %s", sys.executable)
