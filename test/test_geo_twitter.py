@@ -68,13 +68,13 @@ def test_GeoTweets_FetchTweets_imperial(MockTwython):
 				.returns_fake()
 
 				# FetchTweets
-				.expects('search').with_args(q='-RT', result_type='recent', lang='en',
+				.expects('search').with_args(q='-RT', result_type='recent',
 									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'mi')
 				.returns(tweets_page1)
-				.expects('search').with_args(q='-RT', result_type='recent', lang='en', max_id='status2',
+				.expects('search').with_args(q='-RT', result_type='recent', max_id='status2',
 									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'mi')
 				.returns(tweets_page2)
-				.expects('search').with_args(q='-RT', result_type='recent', lang='en', max_id='status3',
+				.expects('search').with_args(q='-RT', result_type='recent',  max_id='status3',
 									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'mi')
 				.returns(None)) #Returning None will cause the generator to stop
 	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
@@ -120,13 +120,13 @@ def test_GeoTweets_FetchTweets_metric(MockTwython):
 				.returns_fake()
 
 				# FetchTweets
-				.expects('search').with_args(q='-RT', result_type='recent', lang='en',
+				.expects('search').with_args(q='-RT', result_type='recent',
 									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'km')
 				.returns(tweets_page1)
-				.expects('search').with_args(q='-RT', result_type='recent', lang='en', max_id='status2',
+				.expects('search').with_args(q='-RT', result_type='recent', max_id='status2',
 									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'km')
 				.returns(tweets_page2)
-				.expects('search').with_args(q='-RT', result_type='recent', lang='en', max_id='status3',
+				.expects('search').with_args(q='-RT', result_type='recent', max_id='status3',
 									geocode=str(FAKE_LOCATION_LAT)+','+str(FAKE_LOCATION_LONG)+','+str(FAKE_LOCATION_RADIUS)+'km')
 				.returns(None)) #Returning None will cause the generator to stop
 	geo_tweets = GeoTweets(FAKE_CONSUMER_KEY, FAKE_CONSUMER_SECRET)
