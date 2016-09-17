@@ -72,6 +72,19 @@ def get_genres():
 	spotify_response = spotify.recommendation_genre_seeds()
 	return jsonify(spotify_response)
 
+class NoSSLException(Exception):
+	"""
+	Indicates that the client did not use SSL, but should have.
+	"""
+	pass
+
+@app.errorhandler(NoSSLException)
+def require_ssl(error):
+	"""
+	Error handler for when a method is called without SSL, but requires SSL.
+	"""
+	return 'For security of GPS coordinates, do NOT call /geo-poetry without using SSL.', 403
+
 @app.route("/geo-poetry", methods=['POST'])
 def get_geo_poetry():
 	"""
@@ -79,6 +92,8 @@ def get_geo_poetry():
 
 	Route: /geo-poetry
 	HTTP Methods supported: POST
+	For security of GPS coordinates, clients must use HTTPS. If they do not,
+	  this method will return 403 Forbidden
 	@type arguments: application/json (POST data)
 	@param arguments: A JSON object with 5 attributes:
 		'latitude' (float) - required,
@@ -90,6 +105,10 @@ def get_geo_poetry():
 	@rtype: application/json
 	@return: A JSON object with 2 attributes: 'poetry' (the generated poetry as string), 'track' (spotify URI)
 	"""
+	# Error if the client did not use SSL. (For local testing, ignore if debug mode.)
+	if request.url.startswith('http://') and not app.debug:
+		raise(NoSSLException)
+
 	getSentiment = vaderSentiment.vaderSentiment.sentiment
 	SpotifyClientCredentials = spotipy.oauth2.SpotifyClientCredentials
 	
@@ -195,5 +214,5 @@ if __name__ == "__main__":
 	SPOTIFY_CLIENT_ID = conf.get('Spotify', 'client_id')
 	SPOTIFY_CLIENT_SECRET = conf.get('Spotify', 'client_secret')
 
-	app.debug = False # Do NOT use debug mode in production, it is not secure.
+	app.debug = True # Do NOT use debug mode in production, it is not secure.
 	app.run()

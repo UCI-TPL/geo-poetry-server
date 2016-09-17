@@ -52,9 +52,14 @@ The server exposes an API with two methods.
 	* "genre" - *Optional.* A string specifying the genre of music to select from. The default is "ambient". Use the */get-genres* method to get a list of available genres.
 	* "song_energy" - *Optional.* A floating-point number between 0 and 1 specifying the energeticness of the track to return. Allows clients to vary the music energy over time.
 
-	POST data must be sent with the *application/json* mime-type. For security
-	of the transmitted GPS coordinates, HTTPS is required. It returns JSON with
-	the following attributes:
+	POST data must be sent with the *application/json* mime-type.
+	For security of the transmitted GPS coordinates, clients must call this method over HTTPS.
+	If the method is called without SSL, it will return 403 Forbidden.
+	_Developer's Note_: I attempted to return 403.4 SSL Required, which is not in the RFC but is a common practice.
+	However, Flask cannot handle floating point error codes - and probably other web frameworks can't either,
+	so it might be a bad idea.
+
+	The method returns JSON with the following attributes:
 
 	* "poetry" - A string of computer-generated poetry.
 	* "track" - A Spotify URI for the mood music to play. (See the definition of Spotify URI at the Spotify API: [https://developer.spotify.com/web-api/user-guide/#spotify-uris-and-ids](https://developer.spotify.com/web-api/user-guide/#spotify-uris-and-ids))
