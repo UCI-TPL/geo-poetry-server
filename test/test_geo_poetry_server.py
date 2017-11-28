@@ -18,6 +18,7 @@ from common_types import Location
 
 # SETUP
 app.config['TESTING'] = True
+app.debug = True
 client = app.test_client()
 
 def test_ping():
