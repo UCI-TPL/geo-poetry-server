@@ -1,3 +1,6 @@
+from __future__ import print_function
+import sys
+#TODO Remove above lines
 """
 The main server program. Spins up a Flask instance with the necessary methods.
 
@@ -219,7 +222,8 @@ SPOTIFY_CLIENT_SECRET = conf.get('Spotify', 'client_secret')
 #app.logger.info("Spotify client_id " + SPOTIFY_CLIENT_ID)
 #app.logger.info("Spotify client_secret " + SPOTIFY_CLIENT_SECRET)
 
-app.debug = False # Do NOT use debug mode in production, it is not secure.
+app.debug = True # Do NOT use debug mode in production, it is not secure.
+print("WARNING! DEBUG mode is on DISABLE this before production", file=sys.stderr)
 
 if __name__ == "__main__":
 	app.run()
